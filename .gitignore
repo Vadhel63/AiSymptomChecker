@@ -1,0 +1,217 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# ================================
+# FRONTEND (React) - AiSymptomChecker
+# ================================
+
+# Dependencies
+frontend/AiSymptomChecker/node_modules/
+frontend/AiSymptomChecker/.pnp
+frontend/AiSymptomChecker/.pnp.js
+
+# Testing
+frontend/AiSymptomChecker/coverage/
+
+# Production builds
+frontend/AiSymptomChecker/build/
+frontend/AiSymptomChecker/dist/
+
+# Environment files
+frontend/AiSymptomChecker/.env
+frontend/AiSymptomChecker/.env.local
+frontend/AiSymptomChecker/.env.development.local
+frontend/AiSymptomChecker/.env.test.local
+frontend/AiSymptomChecker/.env.production.local
+
+# Logs
+frontend/AiSymptomChecker/npm-debug.log*
+frontend/AiSymptomChecker/yarn-debug.log*
+frontend/AiSymptomChecker/yarn-error.log*
+
+# Runtime data
+frontend/AiSymptomChecker/pids
+frontend/AiSymptomChecker/*.pid
+frontend/AiSymptomChecker/*.seed
+frontend/AiSymptomChecker/*.pid.lock
+
+# Misc
+frontend/AiSymptomChecker/.DS_Store
+
+# ================================
+# BACKEND (Spring Boot) - Ai-symptom
+# ================================
+
+# Compiled class files
+backend/Ai-symptom/target/
+backend/Ai-symptom/build/
+backend/Ai-symptom/out/
+backend/Ai-symptom/bin/
+
+# Maven wrapper
+backend/Ai-symptom/.mvn/
+backend/Ai-symptom/mvnw
+backend/Ai-symptom/mvnw.cmd
+
+# Gradle
+backend/Ai-symptom/.gradle/
+backend/Ai-symptom/gradle/
+backend/Ai-symptom/gradlew
+backend/Ai-symptom/gradlew.bat
+
+# JAR/WAR files
+backend/Ai-symptom/*.jar
+backend/Ai-symptom/*.war
+backend/Ai-symptom/*.ear
+backend/Ai-symptom/*.zip
+backend/Ai-symptom/*.tar.gz
+backend/Ai-symptom/*.rar
+
+# Spring Boot specific
+backend/Ai-symptom/application.properties.local
+backend/Ai-symptom/application-local.yml
+backend/Ai-symptom/application-dev.properties
+
+# Database files
+backend/Ai-symptom/*.db
+backend/Ai-symptom/*.sqlite
+backend/Ai-symptom/*.sqlite3
+
+# H2 Database
+backend/Ai-symptom/*.h2.db
+backend/Ai-symptom/*.trace.db
+backend/Ai-symptom/*.lock.db
+
+# Logs
+backend/Ai-symptom/logs/
+backend/Ai-symptom/*.log
+backend/Ai-symptom/spring.log
+
+# ================================
+# IDE FILES
+# ================================
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# VS Code
+.vscode/
+.history/
+
+# Eclipse
+.metadata/
+.project
+.classpath
+.settings/
+*.tmp
+*.bak
+*.swp
+*~.nib
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# ================================
+# OPERATING SYSTEM FILES
+# ================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.nfs*
+
+# ================================
+# ENVIRONMENT & CONFIG FILES
+# ================================
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Config files (add your specific config files)
+config/local.json
+secrets.json
+
+# ================================
+# TEMPORARY FILES
+# ================================
+
+# Temporary folders
+tmp/
+temp/
+cache/
+
+# Log files
+*.log
+logs/
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# ================================
+# DEPLOYMENT FILES
+# ================================
+
+# Docker
+.dockerignore
+
+# Kubernetes
+*.yaml.backup
+
+# ================================
+# SECURITY FILES (NEVER COMMIT!)
+# ================================
+
+# Private keys
+*.pem
+*.key
+*.p12
+*.jks
+
+# Database credentials
+database.properties
+db.properties
+
+# JWT secrets
+jwt.secret
+
+# API keys
+api-keys.json
+keys.json
+
+# ================================
+# PROJECT SPECIFIC
+# ================================
+
+# Add your project-specific files here
+# Example:
+# uploads/
+# user-uploads/
+# generated-reports/
