@@ -1,106 +1,138 @@
-<div align="center">
+# AiSymptomChecker
 
-# 🩺 AI Symptom Checker & Doctor Appointment System
-
-[![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://www.oracle.com/java/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![React](https://img.shields.io/badge/React-18.2.0-blue.svg)](https://reactjs.org/)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0+-blue.svg)](https://www.mysql.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
-**A comprehensive healthcare management platform with AI-powered symptom checking, appointment booking, and role-based dashboards for patients, doctors, and administrators.**
-
-[🚀 Live Demo](https://your-demo-link.com) • [📖 Documentation](https://github.com/yourusername/ai-symptom-checker/wiki) • [🐛 Report Bug](https://github.com/yourusername/ai-symptom-checker/issues) • [✨ Request Feature](https://github.com/yourusername/ai-symptom-checker/issues)
-
-</div>
+A fully integrated AI-powered symptom checker with role-based authentication and real-time backend integration for patients, doctors, and admins.
 
 ---
 
-## 📋 Table of Contents
+## 🚀 Project Overview
 
-- [🌟 Features](#-features)
-- [🏗️ System Architecture](#️-system-architecture)
-- [🔐 Authentication Flow](#-authentication-flow)
-- [📊 Dashboard Features](#-dashboard-features)
-- [🛠️ Technology Stack](#️-technology-stack)
-- [⚙️ Installation & Setup](#️-installation--setup)
-- [🔧 Configuration](#-configuration)
-- [📱 API Documentation](#-api-documentation)
-- [📸 Screenshots](#-screenshots)
-- [🚀 Deployment](#-deployment)
-- [🧪 Testing](#-testing)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
-- [🙏 Acknowledgments](#-acknowledgments)
-- [📞 Support & Contact](#-support--contact)
+AiSymptomChecker is a comprehensive health management system with robust role segregation and live data synchronization. The system seamlessly integrates patient, doctor, and admin dashboards, providing tailored workflows, advanced appointment management, and medical reporting.
 
 ---
 
-## 🌟 Features
+## 📁 Project Structure
 
-### 🔐 **Advanced Authentication System**
-- **JWT-powered Security**: Secure token-based authentication with refresh mechanism
-- **Role-based Access Control**: Three distinct user roles (Patient, Doctor, Admin)
-- **Doctor Approval Workflow**: Admin approval required for doctor registrations
-- **Protected Routes**: Role-specific dashboard access and feature restrictions
-- **Session Management**: Secure login/logout with token expiration handling
+```
+AiSymptomChecker/
+├── backend/
+│   └── Ai-sypmtom/
+├── frontend/
+│   └── AiSymptomChecker/
+├── .gitignore
+├── README.md
+```
 
-### 🤖 **AI-Powered Health Tools**
-- **Intelligent Symptom Checker**: AI-driven symptom analysis and recommendations
-- **Health Risk Assessment**: Personalized health risk evaluation
-- **Medical History Analysis**: Pattern recognition in patient health data
-- **Treatment Suggestions**: Evidence-based treatment recommendations
-
-### 📅 **Comprehensive Appointment System**
-- **Real-time Booking**: Live availability checking and instant confirmation
-- **Conflict Prevention**: Automatic scheduling conflict detection
-- **Approval Workflow**: Doctor approval system for appointment requests
-- **Calendar Integration**: Full calendar view with appointment management
-- **Automated Notifications**: Email and in-app appointment reminders
-
-### 📊 **Advanced Analytics & Reporting**
-- **Patient Analytics**: Health trends and progress tracking
-- **Doctor Performance**: Appointment statistics and patient feedback
-- **System Metrics**: Platform usage and performance analytics
-- **Custom Reports**: Exportable reports in PDF and Excel formats
+- **backend/Ai-sypmtom/**: Contains backend API, authentication, business logic, and integrations.
+- **frontend/AiSymptomChecker/**: Contains all frontend code (React or similar) for UI, dashboards, and client-side logic.
 
 ---
 
-## 🏗️ System Architecture
+## 🔐 Enhanced Authentication & Authorization
 
-```mermaid
-graph TB
-    subgraph "Frontend Layer"
-        A[React Application]
-        B[Patient Dashboard]
-        C[Doctor Dashboard]
-        D[Admin Dashboard]
-        E[AI Symptom Checker]
-    end
-    
-    subgraph "Backend Layer"
-        F[Spring Boot API]
-        G[Authentication Service]
-        H[Appointment Service]
-        I[Medical Records Service]
-        J[AI Analysis Service]
-    end
-    
-    subgraph "Data Layer"
-        K[MySQL Database]
-        L[User Management]
-        M[Appointment Data]
-        N[Medical Records]
-        O[System Logs]
-    end
-    
-    A --> F
-    B --> G
-    C --> H
-    D --> I
-    E --> J
-    F --> K
-    G --> L
-    H --> M
-    I --> N
-    J --> O
+- **Role-based redirection**: Users are routed to their respective dashboards upon login.
+- **Doctor approval workflow**: Doctor accounts require admin approval before accessing the system.
+- **Protected routes**: All routes are guarded and accessible only to permitted roles.
+
+---
+
+## 📊 Refined Dashboards
+
+### Patient Dashboard
+- Quick access: Symptom checker, doctor finder, appointments, and medical records.
+- Real-time: See appointment statuses and medical report updates.
+- Health tips and profile management.
+
+### Doctor Dashboard
+- Patient and appointment management, including approve/reject system.
+- Today's schedule, analytics by time period.
+- Medical report creation, including adding medicines.
+- View income and manage profile.
+
+### Admin Dashboard
+- Approve/reject new doctor accounts.
+- System overview: user statistics and recent activity.
+- User management.
+
+---
+
+## 🔗 Backend Integration
+
+- Complete API service layer with robust error handling.
+- JWT token management with auto-refresh.
+- Real-time data updates across dashboards.
+- Proper CORS configuration.
+
+---
+
+## 🎯 Key Features
+
+1. **Doctor Approval Flow**: Doctors register → Admin reviews → Approval/Rejection → Access granted.
+2. **Appointment Management**: Patients book → Doctors approve → Appointment confirmed.
+3. **Medical Reports**: Doctors create reports for completed appointments.
+4. **Role-based Access**: Each user role sees tailored features and dashboards.
+5. **Real-time Updates**: Live information sync across all dashboards.
+
+---
+
+## 🖼️ Screenshots
+
+> Add screenshots of Patient/Doctor/Admin dashboards, login, approval flows, etc.
+
+- ![Dashboard Screenshot](#)
+- ![Appointment Flow](#)
+- ![Medical Report Module](#)
+
+---
+
+## 🛠️ Getting Started
+
+### Prerequisites
+
+- Node.js, npm/yarn
+- Python (if backend uses it), or relevant backend runtime
+- MongoDB/PostgreSQL/Other DB
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/Vadhel63/AiSymptomChecker.git
+
+# Install backend dependencies
+cd backend/Ai-sypmtom
+npm install
+
+# Install frontend dependencies
+cd ../../frontend/AiSymptomChecker
+npm install
+```
+
+### Running the Application
+
+```bash
+# Start backend (from backend/Ai-sypmtom)
+npm run dev
+
+# Start frontend (from frontend/AiSymptomChecker)
+npm start
+```
+
+> Configure `.env` files for backend and frontend as per your environment.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please open issues or pull requests for improvements and bug fixes.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+## 🙏 Acknowledgments
+
+Thanks to all contributors and the open-source community!
