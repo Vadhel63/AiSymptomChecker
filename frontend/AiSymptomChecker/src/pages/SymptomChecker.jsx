@@ -51,16 +51,14 @@ const SymptomChecker = () => {
             parsedData = JSON.parse(jsonMatch[0]);
           } catch (parseError) {
             console.error("JSON parse error:", parseError);
-            // If JSON parsing fails, try to extract information manually
             return extractInfoFromText(responseData);
           }
         } else {
-          // No JSON found, extract information from plain text
           return extractInfoFromText(responseData);
         }
       }
 
-      // Validate and structure the parsed data to match the required format
+      // Enhanced validation and structure for the expected JSON format
       if (parsedData) {
         return {
           symptoms: Array.isArray(parsedData.symptoms)
@@ -78,9 +76,24 @@ const SymptomChecker = () => {
                   typeof condition === "object" && condition.probability
                     ? condition.probability
                     : "Unknown",
+                description:
+                  typeof condition === "object" && condition.description
+                    ? condition.description
+                    : null,
+                urgency:
+                  typeof condition === "object" && condition.urgency
+                    ? condition.urgency
+                    : "normal",
               }))
             : parsedData.conditions
-            ? [{ name: parsedData.conditions, probability: "Unknown" }]
+            ? [
+                {
+                  name: parsedData.conditions,
+                  probability: "Unknown",
+                  description: null,
+                  urgency: "normal",
+                },
+              ]
             : [],
           advice: Array.isArray(parsedData.advice)
             ? parsedData.advice
@@ -95,7 +108,7 @@ const SymptomChecker = () => {
             parsedData.doctor ||
             parsedData.recommendedSpecialist ||
             parsedData.specialist ||
-            null,
+            "General Practitioner or Mental Health Professional",
           severity: parsedData.severity || "moderate",
           urgency: parsedData.urgency || "normal",
           success: true,
@@ -287,16 +300,18 @@ const SymptomChecker = () => {
         </h3>
         <div className="space-y-4">
           {conditions.map((condition, index) => {
-            // Extract probability number, default to 0 if not found
             const probabilityText = condition.probability || "Unknown";
             const probabilityMatch = probabilityText.match(/(\d+)/);
             const probability = probabilityMatch
               ? Number.parseInt(probabilityMatch[1])
               : 0;
 
-            // Determine urgency level based on probability
             const urgencyLevel =
-              probability >= 70 ? "high" : probability >= 40 ? "medium" : "low";
+              condition.urgency === "high" || probability >= 70
+                ? "high"
+                : condition.urgency === "medium" || probability >= 40
+                ? "medium"
+                : "low";
 
             return (
               <div
@@ -338,6 +353,12 @@ const SymptomChecker = () => {
                       style={{ width: `${Math.min(probability, 100)}%` }}
                     ></div>
                   </div>
+                )}
+
+                {condition.description && (
+                  <p className="text-sm text-gray-600 mb-2 bg-gray-50 p-2 rounded">
+                    {condition.description}
+                  </p>
                 )}
 
                 <p className="text-sm text-gray-600">

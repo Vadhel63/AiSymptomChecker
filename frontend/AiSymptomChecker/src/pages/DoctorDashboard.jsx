@@ -80,9 +80,11 @@ const DoctorDashboard = () => {
     yearly: 0,
     totalEarnings: 0,
   });
+  const [medicineLoading, setMedicineLoading] = useState(false);
 
   // Enhanced medicine database with quantities and detailed information
   const medicineDatabase = [
+    // Pain Relief & Anti-inflammatory
     {
       id: 1,
       name: "Paracetamol",
@@ -119,23 +121,6 @@ const DoctorDashboard = () => {
     },
     {
       id: 3,
-      name: "Amoxicillin",
-      genericName: "Amoxicillin",
-      dosage: "250mg",
-      type: "Capsule",
-      manufacturer: "Abbott",
-      category: "Antibiotic",
-      stockQuantity: 200,
-      minStockLevel: 25,
-      price: 5.0,
-      frequency: "3 times daily",
-      duration: "7 days",
-      instructions: "Complete full course",
-      sideEffects: "Diarrhea, allergic reactions",
-      contraindications: "Penicillin allergy",
-    },
-    {
-      id: 4,
       name: "Aspirin",
       genericName: "Acetylsalicylic acid",
       dosage: "75mg",
@@ -152,75 +137,43 @@ const DoctorDashboard = () => {
       contraindications: "Bleeding disorders",
     },
     {
-      id: 5,
-      name: "Metformin",
-      genericName: "Metformin HCl",
-      dosage: "500mg",
+      id: 4,
+      name: "Diclofenac",
+      genericName: "Diclofenac Sodium",
+      dosage: "50mg",
       type: "Tablet",
       manufacturer: "Novartis",
-      category: "Antidiabetic",
-      stockQuantity: 350,
-      minStockLevel: 35,
-      price: 4.0,
+      category: "NSAID",
+      stockQuantity: 250,
+      minStockLevel: 25,
+      price: 4.5,
       frequency: "2 times daily",
-      duration: "Ongoing",
-      instructions: "Take with meals",
-      sideEffects: "Nausea, diarrhea",
-      contraindications: "Kidney disease, heart failure",
+      duration: "7 days",
+      instructions: "Take with food",
+      sideEffects: "Stomach pain, headache",
+      contraindications: "Heart disease, kidney problems",
+    },
+
+    // Antibiotics
+    {
+      id: 5,
+      name: "Amoxicillin",
+      genericName: "Amoxicillin",
+      dosage: "250mg",
+      type: "Capsule",
+      manufacturer: "Abbott",
+      category: "Antibiotic",
+      stockQuantity: 200,
+      minStockLevel: 25,
+      price: 5.0,
+      frequency: "3 times daily",
+      duration: "7 days",
+      instructions: "Complete full course",
+      sideEffects: "Diarrhea, allergic reactions",
+      contraindications: "Penicillin allergy",
     },
     {
       id: 6,
-      name: "Lisinopril",
-      genericName: "Lisinopril",
-      dosage: "10mg",
-      type: "Tablet",
-      manufacturer: "Merck",
-      category: "ACE Inhibitor",
-      stockQuantity: 250,
-      minStockLevel: 25,
-      price: 6.0,
-      frequency: "Once daily",
-      duration: "Ongoing",
-      instructions: "Take at same time daily",
-      sideEffects: "Dry cough, dizziness",
-      contraindications: "Pregnancy, angioedema",
-    },
-    {
-      id: 7,
-      name: "Atorvastatin",
-      genericName: "Atorvastatin calcium",
-      dosage: "20mg",
-      type: "Tablet",
-      manufacturer: "Lipitor",
-      category: "Statin",
-      stockQuantity: 180,
-      minStockLevel: 20,
-      price: 8.0,
-      frequency: "Once daily",
-      duration: "Ongoing",
-      instructions: "Take in evening",
-      sideEffects: "Muscle pain, liver problems",
-      contraindications: "Active liver disease",
-    },
-    {
-      id: 8,
-      name: "Omeprazole",
-      genericName: "Omeprazole",
-      dosage: "20mg",
-      type: "Capsule",
-      manufacturer: "AstraZeneca",
-      category: "PPI",
-      stockQuantity: 320,
-      minStockLevel: 30,
-      price: 7.0,
-      frequency: "Once daily",
-      duration: "14 days",
-      instructions: "Take before breakfast",
-      sideEffects: "Headache, stomach pain",
-      contraindications: "Severe liver disease",
-    },
-    {
-      id: 9,
       name: "Ciprofloxacin",
       genericName: "Ciprofloxacin HCl",
       dosage: "500mg",
@@ -235,6 +188,59 @@ const DoctorDashboard = () => {
       instructions: "Take on empty stomach",
       sideEffects: "Nausea, tendon problems",
       contraindications: "Pregnancy, children under 18",
+    },
+    {
+      id: 7,
+      name: "Azithromycin",
+      genericName: "Azithromycin",
+      dosage: "250mg",
+      type: "Tablet",
+      manufacturer: "Pfizer",
+      category: "Antibiotic",
+      stockQuantity: 180,
+      minStockLevel: 20,
+      price: 12.0,
+      frequency: "Once daily",
+      duration: "5 days",
+      instructions: "Take on empty stomach",
+      sideEffects: "Stomach upset, diarrhea",
+      contraindications: "Liver disease",
+    },
+    {
+      id: 8,
+      name: "Cephalexin",
+      genericName: "Cephalexin",
+      dosage: "500mg",
+      type: "Capsule",
+      manufacturer: "Teva",
+      category: "Antibiotic",
+      stockQuantity: 120,
+      minStockLevel: 15,
+      price: 8.5,
+      frequency: "4 times daily",
+      duration: "7 days",
+      instructions: "Take with or without food",
+      sideEffects: "Diarrhea, stomach upset",
+      contraindications: "Cephalosporin allergy",
+    },
+
+    // Cardiovascular
+    {
+      id: 9,
+      name: "Lisinopril",
+      genericName: "Lisinopril",
+      dosage: "10mg",
+      type: "Tablet",
+      manufacturer: "Merck",
+      category: "ACE Inhibitor",
+      stockQuantity: 250,
+      minStockLevel: 25,
+      price: 6.0,
+      frequency: "Once daily",
+      duration: "Ongoing",
+      instructions: "Take at same time daily",
+      sideEffects: "Dry cough, dizziness",
+      contraindications: "Pregnancy, angioedema",
     },
     {
       id: 10,
@@ -253,7 +259,291 @@ const DoctorDashboard = () => {
       sideEffects: "Dizziness, fatigue",
       contraindications: "Pregnancy, severe kidney disease",
     },
+    {
+      id: 11,
+      name: "Atorvastatin",
+      genericName: "Atorvastatin calcium",
+      dosage: "20mg",
+      type: "Tablet",
+      manufacturer: "Lipitor",
+      category: "Statin",
+      stockQuantity: 180,
+      minStockLevel: 20,
+      price: 8.0,
+      frequency: "Once daily",
+      duration: "Ongoing",
+      instructions: "Take in evening",
+      sideEffects: "Muscle pain, liver problems",
+      contraindications: "Active liver disease",
+    },
+    {
+      id: 12,
+      name: "Amlodipine",
+      genericName: "Amlodipine besylate",
+      dosage: "5mg",
+      type: "Tablet",
+      manufacturer: "Pfizer",
+      category: "Calcium Channel Blocker",
+      stockQuantity: 200,
+      minStockLevel: 25,
+      price: 4.0,
+      frequency: "Once daily",
+      duration: "Ongoing",
+      instructions: "Take at same time daily",
+      sideEffects: "Swelling, dizziness",
+      contraindications: "Severe heart failure",
+    },
+
+    // Diabetes
+    {
+      id: 13,
+      name: "Metformin",
+      genericName: "Metformin HCl",
+      dosage: "500mg",
+      type: "Tablet",
+      manufacturer: "Novartis",
+      category: "Antidiabetic",
+      stockQuantity: 350,
+      minStockLevel: 35,
+      price: 4.0,
+      frequency: "2 times daily",
+      duration: "Ongoing",
+      instructions: "Take with meals",
+      sideEffects: "Nausea, diarrhea",
+      contraindications: "Kidney disease, heart failure",
+    },
+    {
+      id: 14,
+      name: "Glipizide",
+      genericName: "Glipizide",
+      dosage: "5mg",
+      type: "Tablet",
+      manufacturer: "Pfizer",
+      category: "Antidiabetic",
+      stockQuantity: 150,
+      minStockLevel: 20,
+      price: 6.5,
+      frequency: "2 times daily",
+      duration: "Ongoing",
+      instructions: "Take before meals",
+      sideEffects: "Low blood sugar, weight gain",
+      contraindications: "Severe kidney disease",
+    },
+    {
+      id: 15,
+      name: "Insulin Glargine",
+      genericName: "Insulin Glargine",
+      dosage: "100 units/ml",
+      type: "Injection",
+      manufacturer: "Sanofi",
+      category: "Insulin",
+      stockQuantity: 50,
+      minStockLevel: 10,
+      price: 45.0,
+      frequency: "Once daily",
+      duration: "Ongoing",
+      instructions: "Inject subcutaneously",
+      sideEffects: "Low blood sugar, injection site reactions",
+      contraindications: "Hypoglycemia",
+    },
+
+    // Gastrointestinal
+    {
+      id: 16,
+      name: "Omeprazole",
+      genericName: "Omeprazole",
+      dosage: "20mg",
+      type: "Capsule",
+      manufacturer: "AstraZeneca",
+      category: "PPI",
+      stockQuantity: 320,
+      minStockLevel: 30,
+      price: 7.0,
+      frequency: "Once daily",
+      duration: "14 days",
+      instructions: "Take before breakfast",
+      sideEffects: "Headache, stomach pain",
+      contraindications: "Severe liver disease",
+    },
+    {
+      id: 17,
+      name: "Ranitidine",
+      genericName: "Ranitidine HCl",
+      dosage: "150mg",
+      type: "Tablet",
+      manufacturer: "GSK",
+      category: "H2 Blocker",
+      stockQuantity: 200,
+      minStockLevel: 25,
+      price: 3.5,
+      frequency: "2 times daily",
+      duration: "7 days",
+      instructions: "Take with or without food",
+      sideEffects: "Headache, dizziness",
+      contraindications: "Kidney disease",
+    },
+    {
+      id: 18,
+      name: "Loperamide",
+      genericName: "Loperamide HCl",
+      dosage: "2mg",
+      type: "Capsule",
+      manufacturer: "Johnson & Johnson",
+      category: "Antidiarrheal",
+      stockQuantity: 100,
+      minStockLevel: 15,
+      price: 5.0,
+      frequency: "As needed",
+      duration: "2 days",
+      instructions: "Take after loose stool",
+      sideEffects: "Constipation, dizziness",
+      contraindications: "Bacterial diarrhea",
+    },
+
+    // Respiratory
+    {
+      id: 19,
+      name: "Salbutamol",
+      genericName: "Salbutamol sulfate",
+      dosage: "100mcg",
+      type: "Inhaler",
+      manufacturer: "GSK",
+      category: "Bronchodilator",
+      stockQuantity: 80,
+      minStockLevel: 10,
+      price: 15.0,
+      frequency: "As needed",
+      duration: "Ongoing",
+      instructions: "Inhale as directed",
+      sideEffects: "Tremor, rapid heartbeat",
+      contraindications: "Severe heart disease",
+    },
+    {
+      id: 20,
+      name: "Prednisolone",
+      genericName: "Prednisolone",
+      dosage: "5mg",
+      type: "Tablet",
+      manufacturer: "Pfizer",
+      category: "Corticosteroid",
+      stockQuantity: 150,
+      minStockLevel: 20,
+      price: 8.0,
+      frequency: "Once daily",
+      duration: "5 days",
+      instructions: "Take with food",
+      sideEffects: "Weight gain, mood changes",
+      contraindications: "Systemic infections",
+    },
+
+    // Mental Health
+    {
+      id: 21,
+      name: "Sertraline",
+      genericName: "Sertraline HCl",
+      dosage: "50mg",
+      type: "Tablet",
+      manufacturer: "Pfizer",
+      category: "Antidepressant",
+      stockQuantity: 120,
+      minStockLevel: 15,
+      price: 12.0,
+      frequency: "Once daily",
+      duration: "Ongoing",
+      instructions: "Take in morning",
+      sideEffects: "Nausea, sleep problems",
+      contraindications: "MAO inhibitor use",
+    },
+    {
+      id: 22,
+      name: "Lorazepam",
+      genericName: "Lorazepam",
+      dosage: "1mg",
+      type: "Tablet",
+      manufacturer: "Wyeth",
+      category: "Anxiolytic",
+      stockQuantity: 80,
+      minStockLevel: 10,
+      price: 10.0,
+      frequency: "2-3 times daily",
+      duration: "Short term",
+      instructions: "Take as directed",
+      sideEffects: "Drowsiness, confusion",
+      contraindications: "Respiratory depression",
+    },
+
+    // Vitamins & Supplements
+    {
+      id: 23,
+      name: "Vitamin D3",
+      genericName: "Cholecalciferol",
+      dosage: "1000 IU",
+      type: "Tablet",
+      manufacturer: "Nature Made",
+      category: "Vitamin",
+      stockQuantity: 300,
+      minStockLevel: 30,
+      price: 3.0,
+      frequency: "Once daily",
+      duration: "Ongoing",
+      instructions: "Take with food",
+      sideEffects: "Rare at normal doses",
+      contraindications: "Hypercalcemia",
+    },
+    {
+      id: 24,
+      name: "Folic Acid",
+      genericName: "Folic Acid",
+      dosage: "5mg",
+      type: "Tablet",
+      manufacturer: "Abbott",
+      category: "Vitamin",
+      stockQuantity: 200,
+      minStockLevel: 25,
+      price: 2.0,
+      frequency: "Once daily",
+      duration: "Ongoing",
+      instructions: "Take with or without food",
+      sideEffects: "Rare",
+      contraindications: "B12 deficiency",
+    },
+    {
+      id: 25,
+      name: "Iron Sulfate",
+      genericName: "Ferrous Sulfate",
+      dosage: "325mg",
+      type: "Tablet",
+      manufacturer: "Teva",
+      category: "Mineral",
+      stockQuantity: 180,
+      minStockLevel: 20,
+      price: 4.0,
+      frequency: "Once daily",
+      duration: "3 months",
+      instructions: "Take on empty stomach",
+      sideEffects: "Stomach upset, constipation",
+      contraindications: "Iron overload",
+    },
   ];
+
+  // Simulate API call for medicine data
+  const fetchMedicinesFromAPI = async (searchQuery = "") => {
+    // Simulate API delay
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Filter medicines based on search query
+    if (!searchQuery.trim()) {
+      return medicineDatabase;
+    }
+
+    return medicineDatabase.filter(
+      (med) =>
+        med.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        med.genericName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        med.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        med.manufacturer.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  };
 
   useEffect(() => {
     fetchData();
@@ -439,19 +729,22 @@ const DoctorDashboard = () => {
     }
   };
 
-  const searchMedicines = (query) => {
+  const searchMedicines = async (query) => {
     if (!query.trim()) {
       setMedicines([]);
       return;
     }
 
-    const filtered = medicineDatabase.filter(
-      (med) =>
-        med.name.toLowerCase().includes(query.toLowerCase()) ||
-        med.genericName.toLowerCase().includes(query.toLowerCase()) ||
-        med.category.toLowerCase().includes(query.toLowerCase())
-    );
-    setMedicines(filtered);
+    setMedicineLoading(true);
+    try {
+      const results = await fetchMedicinesFromAPI(query);
+      setMedicines(results);
+    } catch (error) {
+      console.error("Error fetching medicines:", error);
+      setMedicines([]);
+    } finally {
+      setMedicineLoading(false);
+    }
   };
 
   const addMedicineToReport = (medicine) => {
@@ -555,7 +848,7 @@ const DoctorDashboard = () => {
           
           <div class="section">
             <p><span class="label">Patient:</span> ${
-              report.appointment?.patient?.user?.userName
+              report.appointment?.patient?.name
             }</p>
             <p><span class="label">Date:</span> ${new Date(
               report.reportDate
@@ -659,9 +952,7 @@ const DoctorDashboard = () => {
     .filter(Boolean)
     .filter(
       (patient) =>
-        patient.user?.userName
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
+        patient.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         patient.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         patient.medicalHistory?.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -1007,7 +1298,7 @@ const DoctorDashboard = () => {
                             </div>
                             <div>
                               <p className="font-medium text-gray-900">
-                                {appointment.patient?.user?.userName}
+                                {appointment.patient?.name}
                               </p>
                               <p className="text-sm text-gray-500">
                                 {appointment.reason}
@@ -1144,8 +1435,8 @@ const DoctorDashboard = () => {
                           <UserCircle className="h-6 w-6 text-indigo-600" />
                         </div>
                         <div>
-                          <h3 className="font-medium text-gray-900">
-                            {patient.user?.userName}
+                          <h3 className="font-medium text-black-900">
+                            {patient.name}
                           </h3>
                           <p className="text-xs text-gray-500">
                             {patient.age} years old, {patient.gender}
@@ -1459,9 +1750,9 @@ const DoctorDashboard = () => {
           {/* Doctor Profile Card */}
           <div className="bg-white rounded-lg p-6 text-center">
             <div className="w-20 h-20 bg-gradient-to-r from-pink-400 to-red-400 rounded-full mx-auto mb-4 flex items-center justify-center">
-              {user?.profileImage ? (
+              {user?.imageUrl ? (
                 <img
-                  src={user.profileImage || "/placeholder.svg"}
+                  src={user.imageUrl || "/placeholder.svg"}
                   alt="Doctor Profile"
                   className="w-full h-full rounded-full object-cover"
                 />
@@ -1988,7 +2279,7 @@ const DoctorDashboard = () => {
                   </div>
                   <div>
                     <h4 className="text-lg font-medium text-gray-900">
-                      {selectedPatient.user?.userName}
+                      {selectedPatient.name}
                     </h4>
                     <p className="text-gray-600">
                       {selectedPatient.age} years old, {selectedPatient.gender}
@@ -2004,10 +2295,10 @@ const DoctorDashboard = () => {
                     Contact Information
                   </h5>
                   <p className="text-sm text-gray-600">
-                    Email: {selectedPatient.user?.email}
+                    Name: {selectedPatient.name}
                   </p>
                   <p className="text-sm text-gray-600">
-                    Phone: {selectedPatient.phone || "Not provided"}
+                    Phone: {selectedPatient.mobilNo || "Not provided"}
                   </p>
                 </div>
 

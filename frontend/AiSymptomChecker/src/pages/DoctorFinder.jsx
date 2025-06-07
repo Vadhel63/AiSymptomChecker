@@ -372,17 +372,12 @@ const DoctorFinder = () => {
                     </div>
                     <div>
                       <h3 className="text-xl font-bold">
-                        Dr. {doctor?.user?.userName || "abcd"}
+                        Dr.{doctor.name || "XYZ"}
                       </h3>
                       <p className="text-blue-100 font-medium">
                         {doctor.specialization}
                       </p>
-                      <div className="flex items-center mt-1">
-                        <Star className="h-4 w-4 text-yellow-300 fill-current" />
-                        <span className="text-sm text-blue-100 ml-1">
-                          4.8 (120+ reviews)
-                        </span>
-                      </div>
+                      
                     </div>
                   </div>
                 </div>
