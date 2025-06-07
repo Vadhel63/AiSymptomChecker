@@ -77,6 +77,7 @@ graph TB
     I --> N
     J --> O
 
+
 ```
 AiSymptomChecker/
 ├── backend/
