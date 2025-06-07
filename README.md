@@ -3,7 +3,7 @@
 AI-powered healthcare platform with role-based dashboards for Patients, Doctors, and Admins. Built with Spring Boot (Java 17) and a React js Frontend.
 
 ---
-![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://www.oracle.com/java/)
+![Java](https://img.shields.io/badge/Java-17+-orange.svg)]
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-18.2.0-blue.svg)](https://reactjs.org/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0+-blue.svg)](https://www.mysql.com/)
