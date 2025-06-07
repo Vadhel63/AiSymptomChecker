@@ -3,7 +3,7 @@
 AI-powered healthcare platform with role-based dashboards for Patients, Doctors, and Admins. Built with Spring Boot (Java 17) and a React js Frontend.
 
 ---
-![Java](https://img.shields.io/badge/Java-17+-orange.svg)]
+![Java](https://img.shields.io/badge/Java-17+-orange.svg)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-18.2.0-blue.svg)](https://reactjs.org/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0+-blue.svg)](https://www.mysql.com/)
@@ -40,6 +40,42 @@ AI-powered healthcare platform with role-based dashboards for Patients, Doctors,
 ---
 
 ## 🏗️ System Architecture
+mermaid
+graph TB
+    subgraph "Frontend Layer"
+        A[React Application]
+        B[Patient Dashboard]
+        C[Doctor Dashboard]
+        D[Admin Dashboard]
+        E[AI Symptom Checker]
+    end
+
+    subgraph "Backend Layer"
+        F[Spring Boot API]
+        G[Authentication Service]
+        H[Appointment Service]
+        I[Medical Records Service]
+        J[AI Analysis Service]
+    end
+
+    subgraph "Data Layer"
+        K[MySQL Database]
+        L[User Management]
+        M[Appointment Data]
+        N[Medical Records]
+        O[System Logs]
+    end
+
+    A --> F
+    B --> G
+    C --> H
+    D --> I
+    E --> J
+    F --> K
+    G --> L
+    H --> M
+    I --> N
+    J --> O
 
 ```
 AiSymptomChecker/
@@ -52,7 +88,7 @@ AiSymptomChecker/
 ```
 
 - **backend/Ai-sypmtom/**: Spring Boot REST API (Java 17)
-- **frontend/AiSymptomChecker/**: Modern frontend (React/Angular/Vue)
+- **frontend/AiSymptomChecker/**: React JS
 
 ---
 
@@ -147,10 +183,10 @@ npm start
 
 > (Document your REST endpoints here or link to Swagger/OpenAPI docs if available)
 
-- **Base URL:** `http://localhost:8080/api`
+- **Base URL:** `http://localhost:8080/`
 - **Endpoints include:**
-  - `/auth/login`
-  - `/auth/register`
+  - `auth/login`
+  - `auth/register`
   - `Api/patients/*`
   - `Api/doctors/*`
   - `Api/admin/*`
