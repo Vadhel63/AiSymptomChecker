@@ -1975,7 +1975,7 @@ const DoctorDashboard = () => {
                   <div className="space-y-2 text-sm">
                     <p>
                       <strong>Name:</strong>{" "}
-                      {selectedReport.appointment?.patient?.user?.userName}
+                      {selectedReport.appointment?.patient?.name}
                     </p>
                     <p>
                       <strong>Age:</strong>{" "}
@@ -2129,8 +2129,7 @@ const DoctorDashboard = () => {
                 Patient Information
               </h4>
               <p className="text-sm text-gray-600">
-                <strong>Name:</strong>{" "}
-                {selectedAppointment.patient?.user?.userName}
+                <strong>Name:</strong> {selectedAppointment.patient?.name}
               </p>
               <p className="text-sm text-gray-600">
                 <strong>Appointment:</strong> {selectedAppointment.reason}

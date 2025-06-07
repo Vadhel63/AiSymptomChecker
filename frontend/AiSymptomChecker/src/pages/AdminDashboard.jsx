@@ -452,7 +452,8 @@ const AdminDashboard = () => {
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center space-x-3">
                         <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                          <Users className="h-6 w-6 text-gray-600" />
+                          <Users className="h-6 w-6 text-gray-600"  />
+                          
                         </div>
                         <div>
                           <h3 className="font-bold text-gray-900">

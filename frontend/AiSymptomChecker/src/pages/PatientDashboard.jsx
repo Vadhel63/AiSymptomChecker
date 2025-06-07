@@ -506,8 +506,7 @@ const PatientDashboard = () => {
                           </div>
                           <div>
                             <h3 className="font-semibold text-gray-900">
-                              Dr.{" "}
-                              {appointment.doctor?.user?.userName || "Unknown"}
+                              Dr. {appointment.doctor?.name || "Unknown"}
                             </h3>
                             <p className="text-blue-600 font-medium">
                               {appointment.doctor?.specialization || "General"}
@@ -627,9 +626,7 @@ const PatientDashboard = () => {
                             </div>
                             <div>
                               <h3 className="font-semibold text-gray-900">
-                                Dr.{" "}
-                                {appointment.doctor?.user?.userName ||
-                                  "Unknown"}
+                                Dr. {appointment.doctor?.name || "Unknown"}
                               </h3>
                               <p className="text-blue-600 font-medium">
                                 {appointment.doctor?.specialization ||
@@ -858,8 +855,7 @@ const PatientDashboard = () => {
                   <div className="space-y-2 text-sm">
                     <p>
                       <strong>Doctor:</strong> Dr.{" "}
-                      {selectedReport.appointment?.doctor?.user?.userName ||
-                        "Unknown"}
+                      {selectedReport.appointment?.doctor?.name || "Unknown"}
                     </p>
                     <p>
                       <strong>Specialization:</strong>{" "}
