@@ -40,43 +40,6 @@ AI-powered healthcare platform with role-based dashboards for Patients, Doctors,
 ---
 
 ## 🏗️ System Architecture
-mermaid
-graph TB
-    subgraph "Frontend Layer"
-        A[React Application]
-        B[Patient Dashboard]
-        C[Doctor Dashboard]
-        D[Admin Dashboard]
-        E[AI Symptom Checker]
-    end
-
-    subgraph "Backend Layer"
-        F[Spring Boot API]
-        G[Authentication Service]
-        H[Appointment Service]
-        I[Medical Records Service]
-        J[AI Analysis Service]
-    end
-
-    subgraph "Data Layer"
-        K[MySQL Database]
-        L[User Management]
-        M[Appointment Data]
-        N[Medical Records]
-        O[System Logs]
-    end
-
-    A --> F
-    B --> G
-    C --> H
-    D --> I
-    E --> J
-    F --> K
-    G --> L
-    H --> M
-    I --> N
-    J --> O
-
 
 ```
 AiSymptomChecker/
