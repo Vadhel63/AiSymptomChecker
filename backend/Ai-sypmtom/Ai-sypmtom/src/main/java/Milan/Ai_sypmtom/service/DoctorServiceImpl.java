@@ -22,8 +22,11 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     public Doctor AddDoctor(Doctor doctor, Long Id) {
         Optional<UserInfo> _user = userInfoRepository.findById(Id);
+
         if (_user.isPresent()) {
+            UserInfo user=_user.get();
             doctor.setUser(_user.get());
+            doctor.setName(user.getUserName());
             return doctorRepository.save(doctor);
         }
         return null;
@@ -33,7 +36,9 @@ public class DoctorServiceImpl implements DoctorService {
     public Doctor AddDoctorByEmail(Doctor doctor, String email) {
         Optional<UserInfo> _user = userInfoRepository.findByEmail(email);
         if (_user.isPresent()) {
+            UserInfo user=_user.get();
             doctor.setUser(_user.get());
+            doctor.setName(user.getUserName());
             return doctorRepository.save(doctor);
         }
         return null;

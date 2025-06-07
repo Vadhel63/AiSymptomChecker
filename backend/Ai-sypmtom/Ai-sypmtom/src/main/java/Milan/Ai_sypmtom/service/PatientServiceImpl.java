@@ -25,6 +25,9 @@ public  class PatientServiceImpl implements  PatientService {
         Optional<UserInfo> _user=userInfoRepository.findById(Id);
         if(_user.isPresent())
         {
+            UserInfo user=_user.get();
+
+            patient.setName(user.getUserName());
             patient.setUser(_user.get());
             return patientRepository.save(patient);
         }
@@ -36,6 +39,9 @@ public  class PatientServiceImpl implements  PatientService {
             Optional<UserInfo>_user=userInfoRepository.findByEmail(email);
             if(_user.isPresent())
             {
+                UserInfo user=_user.get();
+
+                patient.setName(user.getUserName());
                 patient.setUser(_user.get());
                 return patientRepository.save(patient);
             }
