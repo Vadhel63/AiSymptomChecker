@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { doctorAPI } from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
+import { useChat } from "../contexts/ChatContext";
+import Chat from "../components/chat/Chat";
 import {
   Search,
   MapPin,
-  Star,
   Clock,
   DollarSign,
   UserCircle,
@@ -15,16 +17,21 @@ import {
   Award,
   Building,
   Phone,
-  Mail,
   Stethoscope,
+  MessageCircle,
+  X,
 } from "lucide-react";
 
 const DoctorFinder = () => {
+  const { user } = useAuth();
+  const { setActiveConversation } = useChat();
   const [doctors, setDoctors] = useState([]);
   const [filteredDoctors, setFilteredDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [filters, setFilters] = useState({
     specialization: "",
     city: "",
@@ -45,8 +52,7 @@ const DoctorFinder = () => {
   const fetchDoctors = async () => {
     try {
       const response = await doctorAPI.getAllDoctors();
-      console.log("Doctors response:", response.data); // Debug log
-
+      console.log("Doctors response:", response.data);
       setDoctors(response.data);
     } catch (error) {
       console.error("Error fetching doctors:", error);
@@ -56,9 +62,8 @@ const DoctorFinder = () => {
   };
 
   const filterDoctors = () => {
-    let filtered = [...doctors]; // Create a copy to avoid mutation
+    let filtered = [...doctors];
 
-    // Search by name or specialization
     if (searchTerm) {
       filtered = filtered.filter(
         (doctor) =>
@@ -72,7 +77,6 @@ const DoctorFinder = () => {
       );
     }
 
-    // Filter by specialization
     if (filters.specialization) {
       filtered = filtered.filter((doctor) =>
         doctor.specialization
@@ -81,35 +85,30 @@ const DoctorFinder = () => {
       );
     }
 
-    // Filter by city
     if (filters.city) {
       filtered = filtered.filter((doctor) =>
         doctor.city?.toLowerCase().includes(filters.city.toLowerCase())
       );
     }
 
-    // Filter by state
     if (filters.state) {
       filtered = filtered.filter((doctor) =>
         doctor.state?.toLowerCase().includes(filters.state.toLowerCase())
       );
     }
 
-    // Filter by minimum experience
     if (filters.minExperience) {
       filtered = filtered.filter(
         (doctor) => doctor.experience >= Number.parseInt(filters.minExperience)
       );
     }
 
-    // Filter by max fee
     if (filters.maxFee) {
       filtered = filtered.filter(
         (doctor) => doctor.checkUpFee <= Number.parseInt(filters.maxFee)
       );
     }
 
-    // Filter by availability
     if (filters.availability) {
       filtered = filtered.filter((doctor) =>
         doctor.availability
@@ -144,8 +143,26 @@ const DoctorFinder = () => {
     const values = doctors
       .map((doctor) => doctor[field])
       .filter(Boolean)
-      .filter((value, index, self) => self.indexOf(value) === index); // Remove duplicates
+      .filter((value, index, self) => self.indexOf(value) === index);
     return values;
+  };
+
+  const handleMessageClick = (doctor) => {
+    if (!user) {
+      alert("Please login to send messages");
+      return;
+    }
+
+    // Create a user object for the doctor that matches the expected format
+    const doctorUser = {
+      id: doctor.user?.id || doctor.doctorId,
+      name: doctor.user?.userName || doctor.name || "Dr. Unknown",
+      imageUrl: doctor.user?.imageUrl || null,
+    };
+
+    setSelectedDoctor(doctorUser);
+    setActiveConversation(doctorUser);
+    setShowChat(true);
   };
 
   if (loading) {
@@ -372,15 +389,15 @@ const DoctorFinder = () => {
                     </div>
                     <div>
                       <h3 className="text-xl font-bold">
-                        Dr.{doctor.name || "XYZ"}
+                        Dr. {doctor.user?.userName || doctor.name || "Unknown"}
                       </h3>
                       <p className="text-blue-100 font-medium">
                         {doctor.specialization}
                       </p>
-                      
                     </div>
                   </div>
                 </div>
+
                 {/* Doctor Details */}
                 <div className="p-6">
                   <div className="space-y-4">
@@ -451,9 +468,17 @@ const DoctorFinder = () => {
                         <Phone className="h-3 w-3 mr-1" />
                         {doctor.mobileNo}
                       </button>
+                      <button
+                        onClick={() => handleMessageClick(doctor)}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center justify-center"
+                      >
+                        <MessageCircle className="h-3 w-3 mr-1" />
+                        Message
+                      </button>
                     </div>
                   </div>
                 </div>
+
                 {/* Status Badge */}
                 <div className="absolute top-4 right-4">
                   <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
@@ -465,6 +490,31 @@ const DoctorFinder = () => {
           </div>
         )}
       </div>
+
+      {/* Chat Modal */}
+      {showChat && selectedDoctor && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-4xl h-[80vh] mx-4 flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Chat with {selectedDoctor.name}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowChat(false);
+                  setSelectedDoctor(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="flex-1">
+              <Chat />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useChat } from "../contexts/ChatContext";
 import {
   appointmentAPI,
   medicalReportAPI,
   patientAPI,
   doctorAPI,
 } from "../services/api";
+import Chat from "../components/chat/Chat";
 import {
   Users,
   Calendar,
@@ -32,16 +34,15 @@ import {
   FileText,
   Save,
   MapPin,
-  Award,
-  Building,
   Maximize2,
   Download,
   Package,
-  AlertTriangle,
+  MessageCircle,
 } from "lucide-react";
 
 const DoctorDashboard = () => {
   const { user } = useAuth();
+  const { getTotalUnreadCount, setActiveConversation } = useChat();
   const [appointments, setAppointments] = useState([]);
   const [patients, setPatients] = useState([]);
   const [reports, setReports] = useState([]);
@@ -927,6 +928,32 @@ const DoctorDashboard = () => {
     }
   };
 
+  // Start chat with a patient
+  const startChat = (patient) => {
+    if (!patient) return;
+
+    // Handle both patient object formats
+    const patientUser = patient.user || patient;
+    const patientId = patientUser?.id || patient.patientId;
+    const patientName =
+      patient.name || patientUser?.userName || "Unknown Patient";
+    const patientAvatar = patientUser?.imageUrl || null;
+
+    if (!patientId) {
+      console.error("Cannot start chat: Patient ID not found", patient);
+      return;
+    }
+
+    setActiveConversation({
+      id: patientId,
+      name: patientName,
+      avatar: patientAvatar,
+      role: "Patient",
+    });
+
+    setActiveTab("messages");
+  };
+
   const appointmentsArray = Array.isArray(appointments) ? appointments : [];
   const patientsArray = Array.isArray(patients) ? patients : [];
   const reportsArray = Array.isArray(reports) ? reports : [];
@@ -972,6 +999,12 @@ const DoctorDashboard = () => {
     { id: "overview", label: "Dashboard", icon: Activity },
     { id: "appointments", label: "Appointments", icon: Calendar },
     { id: "patients", label: "Patients", icon: Users },
+    {
+      id: "messages",
+      label: "Messages",
+      icon: MessageCircle,
+      badge: getTotalUnreadCount(),
+    },
     { id: "reports", label: "Medical Reports", icon: FileText },
     { id: "medicines", label: "Medicine Inventory", icon: Pill },
   ];
@@ -1008,6 +1041,11 @@ const DoctorDashboard = () => {
             >
               <item.icon className="h-5 w-5" />
               <span className="text-sm font-medium">{item.label}</span>
+              {item.badge > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {item.badge}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -1031,33 +1069,43 @@ const DoctorDashboard = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Bell className="h-6 w-6 text-gray-400" />
+              <div className="relative">
+                <Bell className="h-6 w-6 text-gray-400" />
+                {getTotalUnreadCount() > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {getTotalUnreadCount()}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Welcome Banner */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg p-6 mb-6 text-white relative overflow-hidden">
-            <div className="relative z-10">
-              <h2 className="text-2xl font-bold mb-2">
-                Hello Dr. {user?.userName}
-              </h2>
-              <p className="text-indigo-100">
-                Manage your practice efficiently with our comprehensive tools.
-              </p>
-              <p className="text-indigo-100">
-                Check appointments, manage patients, and create medical reports.
-              </p>
+          {activeTab !== "messages" && (
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg p-6 mb-6 text-white relative overflow-hidden">
+              <div className="relative z-10">
+                <h2 className="text-2xl font-bold mb-2">
+                  Hello Dr. {user?.userName}
+                </h2>
+                <p className="text-indigo-100">
+                  Manage your practice efficiently with our comprehensive tools.
+                </p>
+                <p className="text-indigo-100">
+                  Check appointments, manage patients, and create medical
+                  reports.
+                </p>
+              </div>
+              <div className="absolute right-6 top-1/2 transform -translate-y-1/2">
+                <Stethoscope className="h-16 w-16 text-white opacity-30" />
+              </div>
             </div>
-            <div className="absolute right-6 top-1/2 transform -translate-y-1/2">
-              <Stethoscope className="h-16 w-16 text-white opacity-30" />
-            </div>
-          </div>
+          )}
 
           {activeTab === "overview" && (
             <>
               {/* Dynamic Earnings Overview */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                <div className="bg-white rounded-lg p-6">
+                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-500 mb-1">
@@ -1075,7 +1123,7 @@ const DoctorDashboard = () => {
                     </div>
                   </div>
                 </div>
-                <div className="bg-white rounded-lg p-6">
+                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-500 mb-1">
@@ -1093,7 +1141,7 @@ const DoctorDashboard = () => {
                     </div>
                   </div>
                 </div>
-                <div className="bg-white rounded-lg p-6">
+                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-500 mb-1">
@@ -1109,7 +1157,7 @@ const DoctorDashboard = () => {
                     </div>
                   </div>
                 </div>
-                <div className="bg-white rounded-lg p-6">
+                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-500 mb-1">
@@ -1127,18 +1175,85 @@ const DoctorDashboard = () => {
                 </div>
               </div>
 
+              {/* Clinic Statistics Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-blue-100 text-sm mb-1">
+                        Total Patients
+                      </p>
+                      <p className="text-3xl font-bold">
+                        {stats.totalPatients}
+                      </p>
+                      <p className="text-blue-200 text-xs">Under my care</p>
+                    </div>
+                    <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                      <Users className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg p-6 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-yellow-100 text-sm mb-1">
+                        Pending Appointments
+                      </p>
+                      <p className="text-3xl font-bold">{stats.pending}</p>
+                      <p className="text-yellow-200 text-xs">
+                        Awaiting approval
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                      <Clock className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-100 text-sm mb-1">
+                        Confirmed Today
+                      </p>
+                      <p className="text-3xl font-bold">{stats.today}</p>
+                      <p className="text-green-200 text-xs">Today's schedule</p>
+                    </div>
+                    <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                      <CheckCircle className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-purple-100 text-sm mb-1">Completed</p>
+                      <p className="text-3xl font-bold">{stats.completed}</p>
+                      <p className="text-purple-200 text-xs">
+                        Successfully treated
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                      <CheckCircle className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Quick Actions */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <button
                   onClick={() => setActiveTab("medicines")}
-                  className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left"
+                  className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left group"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                       <Package className="h-6 w-6 text-green-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">
+                      <h3 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors">
                         Medicine Inventory
                       </h3>
                       <p className="text-sm text-gray-500">
@@ -1150,14 +1265,14 @@ const DoctorDashboard = () => {
 
                 <button
                   onClick={() => setActiveTab("reports")}
-                  className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left"
+                  className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left group"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                       <FileText className="h-6 w-6 text-purple-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">
+                      <h3 className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
                         Medical Reports
                       </h3>
                       <p className="text-sm text-gray-500">
@@ -1168,27 +1283,32 @@ const DoctorDashboard = () => {
                 </button>
 
                 <button
-                  onClick={() => setActiveTab("patients")}
-                  className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left"
+                  onClick={() => setActiveTab("messages")}
+                  className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left group"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Users className="h-6 w-6 text-blue-600" />
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <MessageCircle className="h-6 w-6 text-blue-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">
-                        Patient Management
+                      <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                        Patient Messages
                       </h3>
                       <p className="text-sm text-gray-500">
-                        View patient details and history
+                        Chat with your patients
                       </p>
+                      {getTotalUnreadCount() > 0 && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          {getTotalUnreadCount()} unread
+                        </span>
+                      )}
                     </div>
                   </div>
                 </button>
               </div>
 
               {/* Schedule Navigator */}
-              <div className="bg-white rounded-lg p-6">
+              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">
                     Today's Schedule
@@ -1196,11 +1316,11 @@ const DoctorDashboard = () => {
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => navigateDate(-1)}
-                      className="p-2 hover:bg-gray-100 rounded-lg"
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </button>
-                    <span className="text-sm font-medium px-4">
+                    <span className="text-sm font-medium px-4 py-2 bg-gray-100 rounded-lg">
                       {currentDate.toLocaleDateString("en-US", {
                         weekday: "long",
                         year: "numeric",
@@ -1210,7 +1330,7 @@ const DoctorDashboard = () => {
                     </span>
                     <button
                       onClick={() => navigateDate(1)}
-                      className="p-2 hover:bg-gray-100 rounded-lg"
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </button>
@@ -1223,12 +1343,15 @@ const DoctorDashboard = () => {
                       <p className="text-gray-500">
                         No appointments for this date
                       </p>
+                      <p className="text-sm text-gray-400 mt-1">
+                        Enjoy your free time!
+                      </p>
                     </div>
                   ) : (
                     getScheduleForDate(currentDate).map((appointment) => (
                       <div
                         key={appointment.id}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                       >
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
@@ -1241,19 +1364,30 @@ const DoctorDashboard = () => {
                             <p className="text-sm text-gray-500">
                               {appointment.reason}
                             </p>
+                            <p className="text-xs text-gray-400">
+                              {appointment.time} • {appointment.patient?.city}
+                            </p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-medium text-gray-900">
-                            {appointment.time}
-                          </p>
-                          <span
-                            className={`text-xs px-2 py-1 rounded-full ${getStatusColor(
-                              appointment.status
-                            )}`}
-                          >
-                            {appointment.status}
-                          </span>
+                        <div className="flex items-center space-x-3">
+                          <div className="text-right">
+                            <span
+                              className={`text-xs px-2 py-1 rounded-full ${getStatusColor(
+                                appointment.status
+                              )}`}
+                            >
+                              {appointment.status}
+                            </span>
+                          </div>
+                          {appointment.patient && (
+                            <button
+                              onClick={() => startChat(appointment.patient)}
+                              className="p-2 bg-green-100 text-green-600 rounded-full hover:bg-green-200 transition-colors"
+                              title="Message patient"
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))
@@ -1324,6 +1458,15 @@ const DoctorDashboard = () => {
                             </div>
                           </div>
                           <div className="flex items-center space-x-3">
+                            {appointment.patient && (
+                              <button
+                                onClick={() => startChat(appointment.patient)}
+                                className="p-2 bg-indigo-100 text-indigo-600 rounded-full hover:bg-indigo-200"
+                                title="Message patient"
+                              >
+                                <MessageCircle className="h-4 w-4" />
+                              </button>
+                            )}
                             {getStatusIcon(appointment.status)}
                             <span
                               className={`px-2.5 py-0.5 text-xs font-medium rounded-full border ${getStatusColor(
@@ -1382,7 +1525,7 @@ const DoctorDashboard = () => {
                                   className="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition-colors flex items-center"
                                 >
                                   <Maximize2 className="h-3 w-3 mr-1" />
-                                  View
+                                  View Report
                                 </button>
                                 <button
                                   onClick={() =>
@@ -1391,7 +1534,7 @@ const DoctorDashboard = () => {
                                   className="px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 rounded-md hover:bg-green-100 transition-colors flex items-center"
                                 >
                                   <Download className="h-3 w-3 mr-1" />
-                                  PDF
+                                  Download
                                 </button>
                               </div>
                             )}
@@ -1406,714 +1549,691 @@ const DoctorDashboard = () => {
           )}
 
           {activeTab === "patients" && (
-            <div className="bg-white rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Patient Management{" "}
-                {searchTerm && `(${filteredPatients.length} results)`}
-              </h3>
-              {filteredPatients.length === 0 ? (
-                <div className="text-center py-10">
-                  <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-1">
-                    {searchTerm ? "No patients found" : "No patients yet"}
-                  </h3>
-                  <p className="text-gray-500 text-sm">
-                    {searchTerm
-                      ? "Try adjusting your search terms"
-                      : "Patients will appear here after they book appointments with you"}
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredPatients.map((patient) => (
-                    <div
-                      key={patient.patientId}
-                      className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
-                    >
-                      <div className="flex items-center space-x-3 mb-3">
-                        <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                          <UserCircle className="h-6 w-6 text-indigo-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-black-900">
-                            {patient.name}
-                          </h3>
-                          <p className="text-xs text-gray-500">
-                            {patient.age} years old, {patient.gender}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5 text-xs">
-                        <p className="text-gray-600">
-                          <strong>Location:</strong> {patient.city},{" "}
-                          {patient.state}
-                        </p>
-                        {patient.medicalHistory && (
-                          <p className="text-gray-600">
-                            <strong>Medical History:</strong>{" "}
-                            {patient.medicalHistory}
-                          </p>
-                        )}
-                        <p className="text-gray-600">
-                          <strong>Appointments:</strong>{" "}
-                          {
-                            appointmentsArray.filter(
-                              (apt) =>
-                                apt.patient?.patientId === patient.patientId
-                            ).length
-                          }
-                        </p>
-                        <p className="text-gray-600">
-                          <strong>Reports:</strong>{" "}
-                          {
-                            reportsArray.filter(
-                              (report) =>
-                                appointmentsArray.find(
-                                  (apt) => apt.id === report.appointment?.id
-                                )?.patient?.patientId === patient.patientId
-                            ).length
-                          }
-                        </p>
-                      </div>
-
-                      <div className="mt-3 pt-3 border-t border-gray-100">
-                        <button
-                          onClick={() => {
-                            setSelectedPatient(patient);
-                            setShowPatientModal(true);
-                          }}
-                          className="w-full px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition-colors flex items-center justify-center"
-                        >
-                          <Eye className="h-3.5 w-3.5 mr-1.5" />
-                          View Details
-                        </button>
-                      </div>
+            <div className="space-y-6">
+              {/* Patient Statistics Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">
+                        Total Patients
+                      </p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {stats.totalPatients}
+                      </p>
+                      <p className="text-xs text-gray-400">Under my care</p>
                     </div>
-                  ))}
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Users className="h-6 w-6 text-blue-600" />
+                    </div>
+                  </div>
                 </div>
-              )}
+
+                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">
+                        Pending Appointments
+                      </p>
+                      <p className="text-2xl font-bold text-yellow-600">
+                        {stats.pending}
+                      </p>
+                      <p className="text-xs text-gray-400">Awaiting approval</p>
+                    </div>
+                    <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                      <Clock className="h-6 w-6 text-yellow-600" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">
+                        Confirmed Appointments
+                      </p>
+                      <p className="text-2xl font-bold text-green-600">
+                        {stats.confirmed}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        Ready for consultation
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                      <CheckCircle className="h-6 w-6 text-green-600" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">
+                        Completed Consultations
+                      </p>
+                      <p className="text-2xl font-bold text-purple-600">
+                        {stats.completed}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        Successfully treated
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                      <CheckCircle className="h-6 w-6 text-purple-600" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Patient Management{" "}
+                    {searchTerm && `(${filteredPatients.length} results)`}
+                  </h3>
+                </div>
+                <div className="space-y-4">
+                  {filteredPatients.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500">
+                        {searchTerm
+                          ? "No patients found matching your search"
+                          : "No patients found"}
+                      </p>
+                    </div>
+                  ) : (
+                    filteredPatients.map((patient) => {
+                      // Get patient's appointment history
+                      const patientAppointments = appointmentsArray.filter(
+                        (apt) => apt.patient?.patientId === patient.patientId
+                      );
+                      const patientStats = {
+                        total: patientAppointments.length,
+                        pending: patientAppointments.filter(
+                          (apt) => apt.status === "Pending"
+                        ).length,
+                        confirmed: patientAppointments.filter(
+                          (apt) => apt.status === "Confirmed"
+                        ).length,
+                        completed: patientAppointments.filter(
+                          (apt) => apt.status === "Completed"
+                        ).length,
+                      };
+
+                      return (
+                        <div
+                          key={patient.patientId}
+                          className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                              <UserCircle className="h-6 w-6 text-indigo-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {patient.name}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                Age: {patient.age} | Gender: {patient.gender}
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                <MapPin className="h-3 w-3 inline mr-1" />
+                                {patient.city}
+                              </p>
+                              {patient.medicalHistory && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  <strong>Medical History:</strong>{" "}
+                                  {patient.medicalHistory}
+                                </p>
+                              )}
+                              {/* Patient appointment statistics */}
+                              <div className="flex items-center space-x-4 mt-2">
+                                <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                                  {patientStats.total} Total
+                                </span>
+                                {patientStats.pending > 0 && (
+                                  <span className="text-xs text-yellow-600 bg-yellow-50 px-2 py-1 rounded-full">
+                                    {patientStats.pending} Pending
+                                  </span>
+                                )}
+                                {patientStats.confirmed > 0 && (
+                                  <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                                    {patientStats.confirmed} Confirmed
+                                  </span>
+                                )}
+                                {patientStats.completed > 0 && (
+                                  <span className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded-full">
+                                    {patientStats.completed} Completed
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <button
+                              onClick={() => startChat(patient)}
+                              className="p-2 bg-green-100 text-green-600 rounded-full hover:bg-green-200 transition-colors"
+                              title="Message patient"
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedPatient({
+                                  ...patient,
+                                  appointmentStats: patientStats,
+                                });
+                                setShowPatientModal(true);
+                              }}
+                              className="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition-colors flex items-center"
+                            >
+                              <Eye className="h-3 w-3 mr-1" />
+                              View Details
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "messages" && (
+            <div className="h-[calc(100vh-8rem)]">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full">
+                <Chat />
+              </div>
             </div>
           )}
 
           {activeTab === "reports" && (
-            <div className="bg-white rounded-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Medical Reports Management
-                </h3>
-              </div>
-
-              {reportsArray.length === 0 ? (
-                <div className="text-center py-10">
-                  <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-1">
-                    No medical reports yet
+            <div className="space-y-6">
+              <div className="bg-white rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Medical Reports
                   </h3>
-                  <p className="text-gray-500 text-sm">
-                    Reports will appear here after you complete appointments
-                  </p>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {reportsArray.map((report) => {
-                    const associatedAppointment = appointmentsArray.find(
-                      (apt) => apt.id === report.appointment?.id
-                    );
-                    return (
+                <div className="space-y-4">
+                  {reportsArray.length === 0 ? (
+                    <div className="text-center py-8">
+                      <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500">No medical reports found</p>
+                    </div>
+                  ) : (
+                    reportsArray.map((report) => (
                       <div
                         key={report.id}
-                        className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
                       >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                              <FileText className="h-4 w-4 text-green-600" />
-                            </div>
-                            <div>
-                              <h3 className="font-medium text-gray-900 text-sm">
-                                {associatedAppointment?.patient?.user?.userName}
-                              </h3>
-                              <p className="text-xs text-gray-500">
-                                {new Date(
-                                  report.reportDate
-                                ).toLocaleDateString()}
-                              </p>
-                            </div>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                            <FileText className="h-6 w-6 text-indigo-600" />
                           </div>
-                          <div className="flex space-x-1">
-                            <button
-                              onClick={() =>
-                                openReportViewModal(
-                                  report,
-                                  associatedAppointment
-                                )
-                              }
-                              className="text-blue-600 hover:text-blue-800"
-                            >
-                              <Maximize2 className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => downloadReportAsPDF(report)}
-                              className="text-green-600 hover:text-green-800"
-                            >
-                              <Download className="h-4 w-4" />
-                            </button>
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {report.appointment?.patient?.name}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {report.diagnosis}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {new Date(report.reportDate).toLocaleDateString()}
+                            </p>
                           </div>
                         </div>
-
-                        <div className="space-y-2">
-                          <div>
-                            <h4 className="font-medium text-gray-900 text-xs mb-1">
-                              Diagnosis
-                            </h4>
-                            <p className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                              {report.diagnosis?.substring(0, 100)}
-                              {report.diagnosis?.length > 100 ? "..." : ""}
-                            </p>
-                          </div>
-
-                          <div className="pt-2 border-t border-gray-100">
-                            <p className="text-xs text-gray-500">
-                              <strong>Appointment:</strong>{" "}
-                              {associatedAppointment?.reason}
-                            </p>
-                          </div>
+                        <div className="flex items-center space-x-3">
+                          <button
+                            onClick={() =>
+                              openReportViewModal(report, report.appointment)
+                            }
+                            className="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition-colors flex items-center"
+                          >
+                            <Maximize2 className="h-3 w-3 mr-1" />
+                            View Report
+                          </button>
+                          <button
+                            onClick={() => downloadReportAsPDF(report)}
+                            className="px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 rounded-md hover:bg-green-100 transition-colors flex items-center"
+                          >
+                            <Download className="h-3 w-3 mr-1" />
+                            Download
+                          </button>
                         </div>
                       </div>
-                    );
-                  })}
+                    ))
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           )}
 
           {activeTab === "medicines" && (
-            <div className="bg-white rounded-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Medicine Inventory Management
-                </h3>
-                <button
-                  onClick={() => setShowMedicineModal(true)}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
-                >
-                  <Plus className="h-4 w-4 mr-2 inline" />
-                  Search Medicines
-                </button>
-              </div>
-
-              {/* Medicine Inventory Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                {medicineDatabase.slice(0, 6).map((medicine) => (
-                  <div
-                    key={medicine.id}
-                    className={`border rounded-lg p-4 ${
-                      medicine.stockQuantity <= medicine.minStockLevel
-                        ? "border-red-200 bg-red-50"
-                        : "border-gray-200 bg-white"
-                    }`}
+            <div className="space-y-6">
+              <div className="bg-white rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Medicine Inventory
+                  </h3>
+                  <button
+                    onClick={() => setShowMedicineModal(true)}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center"
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                            medicine.stockQuantity <= medicine.minStockLevel
-                              ? "bg-red-100"
-                              : "bg-blue-100"
-                          }`}
-                        >
-                          <Pill
-                            className={`h-4 w-4 ${
-                              medicine.stockQuantity <= medicine.minStockLevel
-                                ? "text-red-600"
-                                : "text-blue-600"
-                            }`}
-                          />
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-gray-900 text-sm">
-                            {medicine.name}
-                          </h3>
-                          <p className="text-xs text-gray-500">
-                            {medicine.dosage} - {medicine.type}
-                          </p>
-                        </div>
-                      </div>
-                      {medicine.stockQuantity <= medicine.minStockLevel && (
-                        <AlertTriangle className="h-4 w-4 text-red-500" />
-                      )}
-                    </div>
-
-                    <div className="space-y-1 text-xs">
-                      <p className="text-gray-600">
-                        <strong>Category:</strong> {medicine.category}
-                      </p>
-                      <p className="text-gray-600">
-                        <strong>Stock:</strong> {medicine.stockQuantity} units
-                      </p>
-                      <p className="text-gray-600">
-                        <strong>Price:</strong> ₹{medicine.price}
-                      </p>
-                      <p className="text-gray-600">
-                        <strong>Manufacturer:</strong> {medicine.manufacturer}
-                      </p>
-                    </div>
-
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                      <div className="flex justify-between items-center">
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full ${
-                            medicine.stockQuantity <= medicine.minStockLevel
-                              ? "bg-red-100 text-red-800"
-                              : "bg-green-100 text-green-800"
-                          }`}
-                        >
-                          {medicine.stockQuantity <= medicine.minStockLevel
-                            ? "Low Stock"
-                            : "In Stock"}
-                        </span>
-                        <button
-                          onClick={() => addMedicineToReport(medicine)}
-                          className="text-xs text-indigo-600 hover:text-indigo-800"
-                        >
-                          Add to Prescription
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Selected Medicines for Prescription */}
-              {selectedMedicines.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="font-medium text-gray-900 mb-3">
-                    Selected for Prescription
-                  </h4>
-                  <div className="space-y-2">
-                    {selectedMedicines.map((medicine) => (
-                      <div
-                        key={medicine.id}
-                        className="flex items-center justify-between p-3 bg-blue-50 rounded-lg"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <Pill className="h-5 w-5 text-blue-600" />
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {medicine.name}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {medicine.dosage} - {medicine.frequency} for{" "}
-                              {medicine.duration}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <div className="flex items-center space-x-2">
-                            <label className="text-sm text-gray-600">
-                              Qty:
-                            </label>
-                            <input
-                              type="number"
-                              min="1"
-                              value={medicine.prescribedQuantity || 1}
-                              onChange={(e) =>
-                                updateMedicineQuantity(
-                                  medicine.id,
-                                  Number.parseInt(e.target.value)
-                                )
-                              }
-                              className="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-                            />
-                          </div>
-                          <button
-                            onClick={() =>
-                              removeMedicineFromReport(medicine.id)
-                            }
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Search Medicines
+                  </button>
                 </div>
-              )}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {medicineDatabase.slice(0, 12).map((medicine) => (
+                    <div
+                      key={medicine.id}
+                      className="border border-gray-200 rounded-lg p-4"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-gray-900">
+                          {medicine.name}
+                        </h4>
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            medicine.stockQuantity > 10
+                              ? "bg-green-100 text-green-800"
+                              : medicine.stockQuantity > 0
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {medicine.stockQuantity > 0
+                            ? `${medicine.stockQuantity} in stock`
+                            : "Out of stock"}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-1">
+                        {medicine.genericName}
+                      </p>
+                      <p className="text-xs text-gray-500 mb-2">
+                        {medicine.category} | {medicine.dosage}
+                      </p>
+                      <p className="text-sm font-medium text-gray-900">
+                        ₹{medicine.price}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {medicine.manufacturer}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>
-
-        {/* Right Sidebar */}
-        <div className="w-80 p-6 space-y-6">
-          {/* Doctor Profile Card */}
-          <div className="bg-white rounded-lg p-6 text-center">
-            <div className="w-20 h-20 bg-gradient-to-r from-pink-400 to-red-400 rounded-full mx-auto mb-4 flex items-center justify-center">
-              {user?.imageUrl ? (
-                <img
-                  src={user.imageUrl || "/placeholder.svg"}
-                  alt="Doctor Profile"
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                <UserCircle className="h-12 w-12 text-white" />
-              )}
-            </div>
-            <h3 className="font-semibold text-gray-900 mb-1">
-              Dr. {user?.userName}
-            </h3>
-            <p className="text-sm text-gray-500 mb-2">
-              {doctorProfile?.specialization || "General Practitioner"}
-            </p>
-            <p className="text-xs text-gray-400 mb-4 flex items-center justify-center">
-              <Building className="h-3 w-3 mr-1" />
-              {doctorProfile?.clinicName || "Medical Center"}
-            </p>
-
-            {doctorProfile && (
-              <div className="text-xs text-gray-500 space-y-1 mb-4">
-                <p className="flex items-center justify-center">
-                  <Award className="h-3 w-3 mr-1" />
-                  {doctorProfile.experience} years experience
-                </p>
-                <p className="flex items-center justify-center">
-                  <MapPin className="h-3 w-3 mr-1" />
-                  {doctorProfile.city}, {doctorProfile.state}
-                </p>
-                <p className="flex items-center justify-center">
-                  <DollarSign className="h-3 w-3 mr-1" />₹
-                  {doctorProfile.checkUpFee} per consultation
-                </p>
-              </div>
-            )}
-
-            <div className="mb-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-500">
-                  {stats.totalPatients} People
-                </span>
-                <span className="text-sm text-gray-500">
-                  {stats.totalPatients}/300
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-indigo-600 h-2 rounded-full"
-                  style={{
-                    width: `${Math.min(
-                      (stats.totalPatients / 300) * 100,
-                      100
-                    )}%`,
-                  }}
-                ></div>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Appointments Limit</p>
-            </div>
-          </div>
-
-          {/* Statistics Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-indigo-600">
-                {stats.completed}
-              </p>
-              <p className="text-sm text-gray-500">Completed</p>
-            </div>
-            <div className="bg-white rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-indigo-600">
-                {stats.totalPatients}
-              </p>
-              <p className="text-sm text-gray-500">Total Patients</p>
-            </div>
-            <div className="bg-white rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-indigo-600">
-                {reportsArray.length}
-              </p>
-              <p className="text-sm text-gray-500">Medical Reports</p>
-            </div>
-            <div className="bg-white rounded-lg p-4 text-center">
-              <p className="text-2xl font-bold text-indigo-600">
-                {stats.total}
-              </p>
-              <p className="text-sm text-gray-500">Total Appointments</p>
-            </div>
-          </div>
-
-          {/* Today's Stats */}
-          <div className="bg-white rounded-lg p-4">
-            <h4 className="font-medium text-gray-900 mb-3">Today's Activity</h4>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">
-                  Today's Appointments
-                </span>
-                <span className="font-medium text-indigo-600">
-                  {stats.today}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Pending Requests</span>
-                <span className="font-medium text-amber-600">
-                  {stats.pending}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Confirmed</span>
-                <span className="font-medium text-green-600">
-                  {stats.confirmed}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Dynamic Earnings Summary */}
-          <div className="bg-white rounded-lg p-4">
-            <h4 className="font-medium text-gray-900 mb-3">Earnings Summary</h4>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Today</span>
-                <span className="font-medium text-green-600">
-                  ₹{earnings.daily}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">This Month</span>
-                <span className="font-medium text-blue-600">
-                  ₹{earnings.monthly}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">This Year</span>
-                <span className="font-medium text-purple-600">
-                  ₹{earnings.yearly}
-                </span>
-              </div>
-              <div className="flex justify-between items-center border-t pt-2">
-                <span className="text-sm font-medium text-gray-900">
-                  Total Earnings
-                </span>
-                <span className="font-bold text-indigo-600">
-                  ₹{earnings.totalEarnings}
-                </span>
-              </div>
-            </div>
-            <div className="mt-3 pt-3 border-t border-gray-100">
-              <p className="text-xs text-gray-500">
-                Rate: ₹{doctorProfile?.checkUpFee || 50} per consultation
-              </p>
-            </div>
-          </div>
-
-          {/* Medicine Stock Alerts */}
-          <div className="bg-white rounded-lg p-4">
-            <h4 className="font-medium text-gray-900 mb-3">Stock Alerts</h4>
-            <div className="space-y-2">
-              {medicineDatabase
-                .filter((med) => med.stockQuantity <= med.minStockLevel)
-                .slice(0, 3)
-                .map((medicine) => (
-                  <div
-                    key={medicine.id}
-                    className="flex items-center space-x-2 p-2 bg-red-50 rounded"
-                  >
-                    <AlertTriangle className="h-4 w-4 text-red-500" />
-                    <div>
-                      <p className="text-sm font-medium text-red-800">
-                        {medicine.name}
-                      </p>
-                      <p className="text-xs text-red-600">
-                        Only {medicine.stockQuantity} left
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              {medicineDatabase.filter(
-                (med) => med.stockQuantity <= med.minStockLevel
-              ).length === 0 && (
-                <p className="text-sm text-gray-500">
-                  All medicines are well stocked
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Medical Report View Modal */}
-      {showReportViewModal && selectedReport && (
+      {/* Modals */}
+      {showPatientModal && selectedPatient && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-semibold text-gray-900">
-                Medical Report
+              <h3 className="text-xl font-semibold text-gray-900">
+                Patient Details
               </h3>
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={() => downloadReportAsPDF(selectedReport)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download PDF
-                </button>
-                <button
-                  onClick={() => setShowReportViewModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
+              <button
+                onClick={() => setShowPatientModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
             </div>
 
-            {/* Report Header */}
-            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-6 mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">
-                    Patient Information
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Patient Information */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6">
+                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                    <UserCircle className="h-5 w-5 mr-2 text-blue-600" />
+                    Personal Information
                   </h4>
-                  <div className="space-y-2 text-sm">
-                    <p>
-                      <strong>Name:</strong>{" "}
-                      {selectedReport.appointment?.patient?.name}
-                    </p>
-                    <p>
-                      <strong>Age:</strong>{" "}
-                      {selectedReport.appointment?.patient?.age} years
-                    </p>
-                    <p>
-                      <strong>Gender:</strong>{" "}
-                      {selectedReport.appointment?.patient?.gender}
-                    </p>
-                    <p>
-                      <strong>Location:</strong>{" "}
-                      {selectedReport.appointment?.patient?.city},{" "}
-                      {selectedReport.appointment?.patient?.state}
-                    </p>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">
-                    Appointment Details
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <p>
-                      <strong>Date:</strong>{" "}
-                      {new Date(selectedReport.reportDate).toLocaleDateString()}
-                    </p>
-                    <p>
-                      <strong>Reason:</strong>{" "}
-                      {selectedReport.appointment?.reason}
-                    </p>
-                    <p>
-                      <strong>Doctor:</strong> Dr. {user?.userName}
-                    </p>
-                    <p>
-                      <strong>Clinic:</strong> {doctorProfile?.clinicName}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Report Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Diagnosis */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                  <Activity className="h-5 w-5 mr-2 text-red-500" />
-                  Diagnosis
-                </h4>
-                <div className="bg-red-50 rounded-lg p-4">
-                  <p className="text-gray-800">
-                    {selectedReport.diagnosis || "No diagnosis provided"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Prescribed Medicines */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                  <Pill className="h-5 w-5 mr-2 text-blue-500" />
-                  Prescribed Medicines
-                </h4>
-                <div className="bg-blue-50 rounded-lg p-4">
-                  {selectedReport.prescribedMedicine ? (
-                    <div className="space-y-2">
-                      {selectedReport.prescribedMedicine
-                        .split(", ")
-                        .map((medicine, index) => (
-                          <div
-                            key={index}
-                            className="flex items-start space-x-2"
-                          >
-                            <span className="text-blue-600 font-medium">
-                              {index + 1}.
-                            </span>
-                            <p className="text-gray-800 text-sm">{medicine}</p>
-                          </div>
-                        ))}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Full Name
+                      </label>
+                      <p className="text-sm text-gray-900 bg-white p-2 rounded border">
+                        {selectedPatient.name}
+                      </p>
                     </div>
-                  ) : (
-                    <p className="text-gray-500">No medicines prescribed</p>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Age
+                      </label>
+                      <p className="text-sm text-gray-900 bg-white p-2 rounded border">
+                        {selectedPatient.age} years
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Gender
+                      </label>
+                      <p className="text-sm text-gray-900 bg-white p-2 rounded border">
+                        {selectedPatient.gender}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Location
+                      </label>
+                      <p className="text-sm text-gray-900 bg-white p-2 rounded border flex items-center">
+                        <MapPin className="h-3 w-3 mr-1 text-gray-500" />
+                        {selectedPatient.city}
+                      </p>
+                    </div>
+                  </div>
+
+                  {selectedPatient.medicalHistory && (
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Medical History
+                      </label>
+                      <p className="text-sm text-gray-900 bg-white p-3 rounded border">
+                        {selectedPatient.medicalHistory}
+                      </p>
+                    </div>
                   )}
                 </div>
+
+                {/* Appointment History */}
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                    <Calendar className="h-5 w-5 mr-2 text-green-600" />
+                    Appointment History
+                  </h4>
+                  <div className="space-y-3">
+                    {appointmentsArray
+                      .filter(
+                        (apt) =>
+                          apt.patient?.patientId === selectedPatient.patientId
+                      )
+                      .slice(0, 5)
+                      .map((appointment) => (
+                        <div
+                          key={appointment.id}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {appointment.reason}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(appointment.date).toLocaleDateString()}{" "}
+                              at {appointment.time}
+                            </p>
+                          </div>
+                          <span
+                            className={`px-2 py-1 text-xs rounded-full ${getStatusColor(
+                              appointment.status
+                            )}`}
+                          >
+                            {appointment.status}
+                          </span>
+                        </div>
+                      ))}
+                    {appointmentsArray.filter(
+                      (apt) =>
+                        apt.patient?.patientId === selectedPatient.patientId
+                    ).length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        No appointments found
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              {/* Doctor Notes */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6 lg:col-span-2">
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                  <FileText className="h-5 w-5 mr-2 text-green-500" />
-                  Doctor's Notes & Recommendations
-                </h4>
-                <div className="bg-green-50 rounded-lg p-4">
-                  <p className="text-gray-800">
-                    {selectedReport.doctorNotes ||
-                      "No additional notes provided"}
-                  </p>
+              {/* Statistics and Actions */}
+              <div className="space-y-6">
+                {/* Appointment Statistics */}
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                    <Activity className="h-5 w-5 mr-2 text-purple-600" />
+                    Appointment Statistics
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">
+                        Total Appointments
+                      </span>
+                      <span className="text-sm font-medium text-blue-600">
+                        {selectedPatient.appointmentStats?.total || 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Pending</span>
+                      <span className="text-sm font-medium text-yellow-600">
+                        {selectedPatient.appointmentStats?.pending || 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Confirmed</span>
+                      <span className="text-sm font-medium text-green-600">
+                        {selectedPatient.appointmentStats?.confirmed || 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Completed</span>
+                      <span className="text-sm font-medium text-purple-600">
+                        {selectedPatient.appointmentStats?.completed || 0}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <h4 className="font-semibold text-gray-900 mb-4">
+                    Quick Actions
+                  </h4>
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => {
+                        startChat(selectedPatient);
+                        setShowPatientModal(false);
+                      }}
+                      className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all transform hover:scale-105"
+                    >
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Send Message
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowPatientModal(false);
+                        setActiveTab("appointments");
+                      }}
+                      className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all transform hover:scale-105"
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      View Appointments
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowPatientModal(false);
+                        setActiveTab("reports");
+                      }}
+                      className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all transform hover:scale-105"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Medical Reports
+                    </button>
+                  </div>
+                </div>
+
+                {/* Patient Contact */}
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-6">
+                  <h4 className="font-semibold text-gray-900 mb-3">
+                    Contact Information
+                  </h4>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">
+                      <strong>Patient ID:</strong> {selectedPatient.patientId}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      <strong>Registration:</strong>{" "}
+                      {selectedPatient.user?.createdAt
+                        ? new Date(
+                            selectedPatient.user.createdAt
+                          ).toLocaleDateString()
+                        : "N/A"}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      <strong>Last Visit:</strong>{" "}
+                      {appointmentsArray
+                        .filter(
+                          (apt) =>
+                            apt.patient?.patientId ===
+                              selectedPatient.patientId &&
+                            apt.status === "Completed"
+                        )
+                        .sort((a, b) => new Date(b.date) - new Date(a.date))[0]
+                        ?.date
+                        ? new Date(
+                            appointmentsArray
+                              .filter(
+                                (apt) =>
+                                  apt.patient?.patientId ===
+                                    selectedPatient.patientId &&
+                                  apt.status === "Completed"
+                              )
+                              .sort(
+                                (a, b) => new Date(b.date) - new Date(a.date)
+                              )[0].date
+                          ).toLocaleDateString()
+                        : "No visits yet"}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Report Footer */}
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <div className="flex justify-between items-center">
-                <div className="text-sm text-gray-500">
-                  <p>
-                    Report generated on{" "}
-                    {new Date(selectedReport.reportDate).toLocaleDateString()}
-                  </p>
-                  <p>
-                    Consultation Fee: ₹{doctorProfile?.checkUpFee || 50} |
-                    Status:{" "}
-                    <span className="text-green-600 font-medium">
-                      Completed
-                    </span>
-                  </p>
-                </div>
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => downloadReportAsPDF(selectedReport)}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                  >
-                    Print Report
-                  </button>
-                  <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                    Share Report
-                  </button>
-                </div>
-              </div>
+            {/* Modal Footer */}
+            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 mt-6">
+              <button
+                onClick={() => setShowPatientModal(false)}
+                className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Medical Report Modal */}
+      {showMedicineModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Medicine Search
+              </h3>
+              <button
+                onClick={() => setShowMedicineModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="mb-4">
+              <div className="relative">
+                <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search medicines by name, generic name, category..."
+                  value={medicineSearch}
+                  onChange={(e) => {
+                    setMedicineSearch(e.target.value);
+                    searchMedicines(e.target.value);
+                  }}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full"
+                />
+              </div>
+            </div>
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {medicineLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-2"></div>
+                  <p className="text-gray-500">Searching medicines...</p>
+                </div>
+              ) : medicines.length === 0 ? (
+                <div className="text-center py-8">
+                  <Package className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">
+                    {medicineSearch
+                      ? "No medicines found matching your search"
+                      : "Start typing to search for medicines"}
+                  </p>
+                </div>
+              ) : (
+                medicines.map((medicine) => (
+                  <div
+                    key={medicine.id}
+                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-gray-900">
+                          {medicine.name}
+                        </h4>
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            medicine.stockQuantity > 10
+                              ? "bg-green-100 text-green-800"
+                              : medicine.stockQuantity > 0
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {medicine.stockQuantity > 0
+                            ? `${medicine.stockQuantity} in stock`
+                            : "Out of stock"}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-1">
+                        <strong>Generic:</strong> {medicine.genericName}
+                      </p>
+                      <p className="text-sm text-gray-600 mb-1">
+                        <strong>Category:</strong> {medicine.category} |{" "}
+                        <strong>Dosage:</strong> {medicine.dosage}
+                      </p>
+                      <p className="text-sm font-medium text-gray-900">
+                        ₹{medicine.price}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {medicine.description}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="flex justify-end pt-4">
+              <button
+                onClick={() => setShowMedicineModal(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showMedicalReportModal && selectedAppointment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-gray-900">
                 Create Medical Report
               </h3>
               <button
@@ -2123,25 +2243,23 @@ const DoctorDashboard = () => {
                 <X className="h-6 w-6" />
               </button>
             </div>
+            <div className="space-y-6">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-2">
+                  Patient Information
+                </h4>
+                <p className="text-sm text-gray-600">
+                  <strong>Name:</strong> {selectedAppointment.patient?.name}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Appointment Date:</strong>{" "}
+                  {new Date(selectedAppointment.date).toLocaleDateString()}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Reason:</strong> {selectedAppointment.reason}
+                </p>
+              </div>
 
-            <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-              <h4 className="font-medium text-gray-900 mb-2">
-                Patient Information
-              </h4>
-              <p className="text-sm text-gray-600">
-                <strong>Name:</strong> {selectedAppointment.patient?.name}
-              </p>
-              <p className="text-sm text-gray-600">
-                <strong>Appointment:</strong> {selectedAppointment.reason}
-              </p>
-              <p className="text-sm text-gray-600">
-                <strong>Date:</strong>{" "}
-                {new Date(selectedAppointment.date).toLocaleDateString()} at{" "}
-                {selectedAppointment.time}
-              </p>
-            </div>
-
-            <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Diagnosis
@@ -2154,15 +2272,104 @@ const DoctorDashboard = () => {
                       diagnosis: e.target.value,
                     })
                   }
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  rows="3"
-                  placeholder="Enter patient diagnosis..."
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Enter diagnosis..."
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Doctor Notes
+                  Prescribed Medicines
+                </label>
+                <div className="space-y-4">
+                  <div className="relative">
+                    <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search and add medicines..."
+                      value={medicineSearch}
+                      onChange={(e) => {
+                        setMedicineSearch(e.target.value);
+                        searchMedicines(e.target.value);
+                      }}
+                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full"
+                    />
+                  </div>
+
+                  {medicineSearch && medicines.length > 0 && (
+                    <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg">
+                      {medicines.slice(0, 5).map((medicine) => (
+                        <button
+                          key={medicine.id}
+                          onClick={() => addMedicineToReport(medicine)}
+                          className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                        >
+                          <p className="font-medium text-gray-900">
+                            {medicine.name}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {medicine.genericName} - {medicine.dosage}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {selectedMedicines.length > 0 && (
+                    <div className="space-y-3">
+                      <h5 className="font-medium text-gray-900">
+                        Selected Medicines:
+                      </h5>
+                      {selectedMedicines.map((medicine) => (
+                        <div
+                          key={medicine.id}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        >
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">
+                              {medicine.name}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {medicine.dosage} - {medicine.frequency} for{" "}
+                              {medicine.duration}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {medicine.instructions}
+                            </p>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="number"
+                              min="1"
+                              value={medicine.prescribedQuantity}
+                              onChange={(e) =>
+                                updateMedicineQuantity(
+                                  medicine.id,
+                                  Number.parseInt(e.target.value)
+                                )
+                              }
+                              className="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
+                            />
+                            <button
+                              onClick={() =>
+                                removeMedicineFromReport(medicine.id)
+                              }
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Doctor's Notes
                 </label>
                 <textarea
                   value={medicalReportForm.doctorNotes}
@@ -2172,392 +2379,125 @@ const DoctorDashboard = () => {
                       doctorNotes: e.target.value,
                     })
                   }
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  rows="3"
-                  placeholder="Enter additional notes and recommendations..."
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Enter additional notes, recommendations, follow-up instructions..."
                 />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  onClick={() => setShowMedicalReportModal(false)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleMedicalReportSubmit}
+                  disabled={
+                    !medicalReportForm.diagnosis ||
+                    !medicalReportForm.doctorNotes
+                  }
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Create Report
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showReportViewModal && selectedReport && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Medical Report
+              </h3>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => downloadReportAsPDF(selectedReport)}
+                  className="px-3 py-1.5 text-sm font-medium text-green-600 bg-green-50 rounded-md hover:bg-green-100 transition-colors flex items-center"
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  Download PDF
+                </button>
+                <button
+                  onClick={() => setShowReportViewModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+            <div className="space-y-6">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-2">
+                  Patient Information
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">
+                      <strong>Name:</strong>{" "}
+                      {selectedReport.appointment?.patient?.name}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      <strong>Age:</strong>{" "}
+                      {selectedReport.appointment?.patient?.age}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">
+                      <strong>Report Date:</strong>{" "}
+                      {new Date(selectedReport.reportDate).toLocaleDateString()}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      <strong>Appointment Reason:</strong>{" "}
+                      {selectedReport.appointment?.reason}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Prescribed Medicines
-                  </label>
-                  <button
-                    onClick={() => setShowMedicineModal(true)}
-                    className="px-3 py-1 text-xs bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                  >
-                    <Plus className="h-3 w-3 mr-1 inline" />
-                    Add Medicine
-                  </button>
-                </div>
-
-                {selectedMedicines.length === 0 ? (
-                  <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
-                    <Pill className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500">
-                      No medicines added yet
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {selectedMedicines.map((medicine) => (
-                      <div
-                        key={medicine.id}
-                        className="flex items-center justify-between p-3 bg-blue-50 rounded-lg"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <Pill className="h-4 w-4 text-blue-600" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">
-                              {medicine.name} {medicine.dosage}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {medicine.frequency} for {medicine.duration} (Qty:{" "}
-                              {medicine.prescribedQuantity})
-                            </p>
-                            <p className="text-xs text-gray-400">
-                              {medicine.instructions}
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => removeMedicineFromReport(medicine.id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
-              <button
-                onClick={() => setShowMedicalReportModal(false)}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleMedicalReportSubmit}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Create Report
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Patient Details Modal */}
-      {showPatientModal && selectedPatient && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-gray-900">
-                Patient Details & Medical Reports
-              </h3>
-              <button
-                onClick={() => setShowPatientModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Patient Information */}
-              <div className="space-y-4">
-                <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <UserCircle className="h-10 w-10 text-indigo-600" />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-medium text-gray-900">
-                      {selectedPatient.name}
-                    </h4>
-                    <p className="text-gray-600">
-                      {selectedPatient.age} years old, {selectedPatient.gender}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {selectedPatient.city}, {selectedPatient.state}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-4 border border-gray-200 rounded-lg">
-                  <h5 className="font-medium text-gray-900 mb-2">
-                    Contact Information
-                  </h5>
-                  <p className="text-sm text-gray-600">
-                    Name: {selectedPatient.name}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Phone: {selectedPatient.mobilNo || "Not provided"}
-                  </p>
-                </div>
-
-                <div className="p-4 border border-gray-200 rounded-lg">
-                  <h5 className="font-medium text-gray-900 mb-2">
-                    Medical Information
-                  </h5>
-                  <p className="text-sm text-gray-600">
-                    Medical History:{" "}
-                    {selectedPatient.medicalHistory || "None recorded"}
-                  </p>
-                </div>
+                <h4 className="font-medium text-gray-900 mb-2">Diagnosis</h4>
+                <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">
+                  {selectedReport.diagnosis}
+                </p>
               </div>
 
-              {/* Medical Reports */}
-              <div className="space-y-4">
-                <h5 className="font-medium text-gray-900">Medical Reports</h5>
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {reportsArray
-                    .filter(
-                      (report) =>
-                        appointmentsArray.find(
-                          (apt) => apt.id === report.appointment?.id
-                        )?.patient?.patientId === selectedPatient.patientId
-                    )
-                    .map((report) => {
-                      const appointment = appointmentsArray.find(
-                        (apt) => apt.id === report.appointment?.id
-                      );
-                      return (
-                        <div
-                          key={report.id}
-                          className="p-4 border border-gray-200 rounded-lg hover:shadow-sm transition-shadow"
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <h6 className="font-medium text-gray-900">
-                              {appointment?.reason || "General Consultation"}
-                            </h6>
-                            <div className="flex items-center space-x-2">
-                              <span className="text-xs text-gray-500">
-                                {new Date(
-                                  report.reportDate
-                                ).toLocaleDateString()}
-                              </span>
-                              <button
-                                onClick={() =>
-                                  openReportViewModal(report, appointment)
-                                }
-                                className="text-indigo-600 hover:text-indigo-800"
-                              >
-                                <Maximize2 className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={() => downloadReportAsPDF(report)}
-                                className="text-green-600 hover:text-green-800"
-                              >
-                                <Download className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="space-y-2 text-sm">
-                            <div>
-                              <strong className="text-gray-700">
-                                Diagnosis:
-                              </strong>
-                              <p className="text-gray-600">
-                                {report.diagnosis}
-                              </p>
-                            </div>
-
-                            {report.prescribedMedicine && (
-                              <div>
-                                <strong className="text-gray-700">
-                                  Prescribed Medicines:
-                                </strong>
-                                <p className="text-gray-600">
-                                  {report.prescribedMedicine}
-                                </p>
-                              </div>
-                            )}
-
-                            {report.doctorNotes && (
-                              <div>
-                                <strong className="text-gray-700">
-                                  Doctor Notes:
-                                </strong>
-                                <p className="text-gray-600">
-                                  {report.doctorNotes}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                  {reportsArray.filter(
-                    (report) =>
-                      appointmentsArray.find(
-                        (apt) => apt.id === report.appointment?.id
-                      )?.patient?.patientId === selectedPatient.patientId
-                  ).length === 0 && (
-                    <div className="text-center py-8">
-                      <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-500">No medical reports found</p>
-                    </div>
-                  )}
-                </div>
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">
+                  Prescribed Medicines
+                </h4>
+                <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">
+                  {selectedReport.prescribedMedicine}
+                </p>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Medicine Search Modal */}
-      {showMedicineModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Search Medicines
-              </h3>
-              <button
-                onClick={() => {
-                  setShowMedicineModal(false);
-                  setMedicineSearch("");
-                  setMedicines([]);
-                }}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            <div className="mb-4">
-              <div className="relative">
-                <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search medicines by name, category, or generic name..."
-                  value={medicineSearch}
-                  onChange={(e) => {
-                    setMedicineSearch(e.target.value);
-                    searchMedicines(e.target.value);
-                  }}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full"
-                />
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">
+                  Doctor's Notes
+                </h4>
+                <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">
+                  {selectedReport.doctorNotes}
+                </p>
               </div>
-            </div>
 
-            <div className="max-h-96 overflow-y-auto">
-              {medicines.length === 0 ? (
-                <div className="text-center py-8">
-                  <Pill className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 text-sm">
-                    {medicineSearch
-                      ? "No medicines found matching your search"
-                      : "Start typing to search medicines"}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {medicines.map((medicine) => (
-                    <div
-                      key={medicine.id}
-                      className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start space-x-3">
-                          <div
-                            className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                              medicine.stockQuantity <= medicine.minStockLevel
-                                ? "bg-red-100"
-                                : "bg-blue-100"
-                            }`}
-                          >
-                            <Pill
-                              className={`h-5 w-5 ${
-                                medicine.stockQuantity <= medicine.minStockLevel
-                                  ? "text-red-600"
-                                  : "text-blue-600"
-                              }`}
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <h4 className="font-medium text-gray-900">
-                                {medicine.name}
-                              </h4>
-                              {medicine.stockQuantity <=
-                                medicine.minStockLevel && (
-                                <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
-                                  Low Stock
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-600 mb-2">
-                              <strong>Generic:</strong> {medicine.genericName} |{" "}
-                              <strong>Dosage:</strong> {medicine.dosage}
-                            </p>
-                            <div className="grid grid-cols-2 gap-4 text-xs text-gray-500">
-                              <div>
-                                <p>
-                                  <strong>Category:</strong> {medicine.category}
-                                </p>
-                                <p>
-                                  <strong>Type:</strong> {medicine.type}
-                                </p>
-                                <p>
-                                  <strong>Manufacturer:</strong>{" "}
-                                  {medicine.manufacturer}
-                                </p>
-                              </div>
-                              <div>
-                                <p>
-                                  <strong>Stock:</strong>{" "}
-                                  {medicine.stockQuantity} units
-                                </p>
-                                <p>
-                                  <strong>Price:</strong> ₹{medicine.price}
-                                </p>
-                                <p>
-                                  <strong>Frequency:</strong>{" "}
-                                  {medicine.frequency}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="mt-2 text-xs">
-                              <p>
-                                <strong>Instructions:</strong>{" "}
-                                {medicine.instructions}
-                              </p>
-                              <p>
-                                <strong>Side Effects:</strong>{" "}
-                                {medicine.sideEffects}
-                              </p>
-                              <p>
-                                <strong>Contraindications:</strong>{" "}
-                                {medicine.contraindications}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => {
-                            addMedicineToReport(medicine);
-                            setShowMedicineModal(false);
-                            setMedicineSearch("");
-                            setMedicines([]);
-                          }}
-                          className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors"
-                        >
-                          Add to Prescription
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="border-t pt-4">
+                <p className="text-sm text-gray-600">
+                  <strong>Doctor:</strong> Dr. {user?.userName}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Specialization:</strong>{" "}
+                  {doctorProfile?.specialization}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Clinic:</strong> {doctorProfile?.clinicName}
+                </p>
+              </div>
             </div>
           </div>
         </div>

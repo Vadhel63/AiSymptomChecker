@@ -1,6 +1,7 @@
 "use client";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
+import { ChatProvider } from "./contexts/ChatContext";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -24,73 +25,84 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {user && <Navbar />}
-      <Routes>
-        <Route
-          path="/login"
-          element={!user ? <Login /> : <Navigate to="/dashboard" />}
-        />
-        <Route
-          path="/register"
-          element={!user ? <Register /> : <Navigate to="/dashboard" />}
-        />
+      {user && (
+        <ChatProvider>
+          <Navbar />
+          <Routes>
+            <Route
+              path="/login"
+              element={!user ? <Login /> : <Navigate to="/dashboard" />}
+            />
+            <Route
+              path="/register"
+              element={!user ? <Register /> : <Navigate to="/dashboard" />}
+            />
 
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardRouter />
-            </ProtectedRoute>
-          }
-        />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardRouter />
+                </ProtectedRoute>
+              }
+            />
 
-        <Route
-          path="/symptom-checker"
-          element={
-            <ProtectedRoute roles={["Patient"]}>
-              <SymptomChecker />
-            </ProtectedRoute>
-          }
-        />
+            <Route
+              path="/symptom-checker"
+              element={
+                <ProtectedRoute roles={["Patient"]}>
+                  <SymptomChecker />
+                </ProtectedRoute>
+              }
+            />
 
-        <Route
-          path="/find-doctors"
-          element={
-            <ProtectedRoute roles={["Patient"]}>
-              <DoctorFinder />
-            </ProtectedRoute>
-          }
-        />
+            <Route
+              path="/find-doctors"
+              element={
+                <ProtectedRoute roles={["Patient"]}>
+                  <DoctorFinder />
+                </ProtectedRoute>
+              }
+            />
 
-        <Route
-          path="/book-appointment/:doctorId"
-          element={
-            <ProtectedRoute roles={["Patient"]}>
-              <BookAppointment />
-            </ProtectedRoute>
-          }
-        />
+            <Route
+              path="/book-appointment/:doctorId"
+              element={
+                <ProtectedRoute roles={["Patient"]}>
+                  <BookAppointment />
+                </ProtectedRoute>
+              }
+            />
 
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
 
-        <Route
-          path="/doctor-pending"
-          element={
-            <ProtectedRoute roles={["Doctor"]}>
-              <DoctorPending />
-            </ProtectedRoute>
-          }
-        />
+            <Route
+              path="/doctor-pending"
+              element={
+                <ProtectedRoute roles={["Doctor"]}>
+                  <DoctorPending />
+                </ProtectedRoute>
+              }
+            />
 
-        <Route path="/" element={<Navigate to="/dashboard" />} />
-      </Routes>
+            <Route path="/" element={<Navigate to="/dashboard" />} />
+          </Routes>
+        </ChatProvider>
+      )}
+      {!user && (
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      )}
     </div>
   );
 }

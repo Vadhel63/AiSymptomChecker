@@ -80,6 +80,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/public/**").permitAll()
+                        .requestMatchers("/chat/**").permitAll() // ✅ allow WebSocket
+                        .requestMatchers("/topic/**").permitAll() // ✅ allow message broker
+                        .requestMatchers("/app/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useChat } from "../contexts/ChatContext";
 import { appointmentAPI, medicalReportAPI } from "../services/api";
+import Chat from "../components/chat/Chat";
 import {
   UserCircle,
   Calendar,
@@ -20,10 +22,13 @@ import {
   Plus,
   Maximize2,
   X,
+  MessageCircle,
+  Download,
 } from "lucide-react";
 
 const PatientDashboard = () => {
   const { user } = useAuth();
+  const { getTotalUnreadCount, setActiveConversation } = useChat();
   const [appointments, setAppointments] = useState([]);
   const [medicalReports, setMedicalReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,17 +48,15 @@ const PatientDashboard = () => {
 
   const cleanJsonString = (jsonString) => {
     try {
-      // Remove extra closing braces and fix common JSON issues
       const cleaned = jsonString
-        .replace(/}+$/g, "}") // Remove multiple closing braces at the end
-        .replace(/}+"/g, '}"') // Fix multiple closing braces before quotes
-        .replace(/}+,/g, "},") // Fix multiple closing braces before commas
-        .replace(/}+]/g, "}]") // Fix multiple closing braces before array end
-        .replace(/,\s*}/g, "}") // Remove trailing commas
-        .replace(/,\s*]/g, "]") // Remove trailing commas in arrays
+        .replace(/}+$/g, "}")
+        .replace(/}+"/g, '}"')
+        .replace(/}+,/g, "},")
+        .replace(/}+]/g, "}]")
+        .replace(/,\s*}/g, "}")
+        .replace(/,\s*]/g, "]")
         .trim();
 
-      // Ensure it starts and ends properly
       if (!cleaned.startsWith("[") && !cleaned.startsWith("{")) {
         return "[]";
       }
@@ -72,7 +75,6 @@ const PatientDashboard = () => {
       let data = null;
       let rawData = null;
 
-      // Extract the raw data
       if (response?.data) {
         rawData = response.data;
       } else if (response) {
@@ -81,11 +83,9 @@ const PatientDashboard = () => {
 
       console.log("Raw Data to Parse:", rawData);
 
-      // Handle different data types
       if (typeof rawData === "string") {
         console.log("Data is string, attempting to clean and parse...");
 
-        // Clean the JSON string first
         const cleanedJson = cleanJsonString(rawData);
         console.log("Cleaned JSON:", cleanedJson);
 
@@ -95,7 +95,6 @@ const PatientDashboard = () => {
           console.error("Failed to parse cleaned JSON:", parseError);
           console.log("Attempting alternative parsing methods...");
 
-          // Try to extract valid JSON using regex
           const jsonMatch = rawData.match(/\[.*\]/s);
           if (jsonMatch) {
             const extractedJson = cleanJsonString(jsonMatch[0]);
@@ -111,20 +110,18 @@ const PatientDashboard = () => {
         data = rawData;
       } else if (rawData && typeof rawData === "object") {
         console.log("Data is object, checking for nested arrays");
-        // Check if it's an object containing an array
         const keys = Object.keys(rawData);
         const arrayKey = keys.find((key) => Array.isArray(rawData[key]));
         if (arrayKey) {
           data = rawData[arrayKey];
         } else {
-          data = [rawData]; // Wrap single object in array
+          data = [rawData];
         }
       } else {
         console.log("Unknown data type, returning empty array");
         data = [];
       }
 
-      // Ensure we return an array
       const result = Array.isArray(data) ? data : [];
       console.log("Final parsed result:", result);
       return result;
@@ -149,7 +146,6 @@ const PatientDashboard = () => {
         reports: reportsResponse,
       });
 
-      // Parse the API responses safely
       const appointmentsData = parseApiData(appointmentsResponse);
       const reportsData = parseApiData(reportsResponse);
 
@@ -162,7 +158,6 @@ const PatientDashboard = () => {
 
       setAppointments(appointmentsData);
 
-      // Filter reports for current user's appointments with safe array operations
       const userReports = reportsData.filter((report) => {
         if (!report || !report.appointment) return false;
         return appointmentsData.some(
@@ -173,7 +168,6 @@ const PatientDashboard = () => {
       console.log("Filtered user reports:", userReports);
       setMedicalReports(userReports);
 
-      // Calculate stats with safe array operations
       const total = appointmentsData.length;
       const pending = appointmentsData.filter(
         (apt) => apt && apt.status === "Pending"
@@ -190,7 +184,6 @@ const PatientDashboard = () => {
       setStats(newStats);
     } catch (error) {
       console.error("Error fetching data:", error);
-      // Set empty arrays as fallback
       setAppointments([]);
       setMedicalReports([]);
       setStats({
@@ -205,12 +198,87 @@ const PatientDashboard = () => {
   };
 
   const openReportModal = (report) => {
-    // Find the associated appointment for this report
     const associatedAppointment = appointments.find(
       (apt) => apt.id === report.appointment?.id
     );
     setSelectedReport({ ...report, appointment: associatedAppointment });
     setShowReportModal(true);
+  };
+
+  const downloadReportAsPDF = (report) => {
+    // Create a simple HTML structure for PDF generation
+    const reportContent = `
+      <html>
+        <head>
+          <title>Medical Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
+            .section { margin: 20px 0; }
+            .label { font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Medical Report</h1>
+            <p>Patient: ${user?.userName}</p>
+            <p>Report Date: ${new Date(
+              report.reportDate
+            ).toLocaleDateString()}</p>
+          </div>
+          
+          <div class="section">
+            <p><span class="label">Doctor:</span> Dr. ${
+              report.appointment?.doctor?.name || "Unknown"
+            }</p>
+            <p><span class="label">Specialization:</span> ${
+              report.appointment?.doctor?.specialization || "General"
+            }</p>
+            <p><span class="label">Appointment Reason:</span> ${
+              report.appointment?.reason
+            }</p>
+          </div>
+          
+          <div class="section">
+            <h3>Diagnosis</h3>
+            <p>${report.diagnosis}</p>
+          </div>
+          
+          <div class="section">
+            <h3>Prescribed Medicines</h3>
+            <p>${report.prescribedMedicine}</p>
+          </div>
+          
+          <div class="section">
+            <h3>Doctor's Notes</h3>
+            <p>${report.doctorNotes}</p>
+          </div>
+          
+          <div class="section">
+            <p><span class="label">Report Generated:</span> ${new Date().toLocaleDateString()}</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Create a new window and print
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(reportContent);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const startChatWithDoctor = (doctor) => {
+    if (!doctor) return;
+
+    const doctorUser = {
+      id: doctor.user?.id || doctor.doctorId,
+      name: doctor.user?.userName || doctor.name || "Dr. Unknown",
+      imageUrl: doctor.user?.imageUrl || null,
+    };
+
+    setActiveConversation(doctorUser);
+    setActiveTab("messages");
   };
 
   const getStatusIcon = (status) => {
@@ -243,6 +311,18 @@ const PatientDashboard = () => {
     }
   };
 
+  const sidebarItems = [
+    { id: "overview", label: "Dashboard", icon: Activity },
+    { id: "appointments", label: "Appointments", icon: Calendar },
+    { id: "reports", label: "Medical Reports", icon: FileText },
+    {
+      id: "messages",
+      label: "Messages",
+      icon: MessageCircle,
+      badge: getTotalUnreadCount(),
+    },
+  ];
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
@@ -255,8 +335,38 @@ const PatientDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Left Sidebar */}
+      <div className="w-64 bg-blue-600 text-white flex flex-col">
+        <div className="p-6">
+          <h1 className="text-xl font-bold">Patient Portal</h1>
+        </div>
+
+        <nav className="flex-1 px-4">
+          {sidebarItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
+                activeTab === item.id
+                  ? "bg-white bg-opacity-20 text-white"
+                  : "text-blue-200 hover:text-white hover:bg-white hover:bg-opacity-10"
+              }`}
+            >
+              <item.icon className="h-5 w-5" />
+              <span className="text-sm font-medium">{item.label}</span>
+              {item.badge > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {item.badge}
+                </span>
+              )}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 p-6">
         {/* Header */}
         <div className="mb-8">
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
@@ -280,188 +390,171 @@ const PatientDashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Link
-            to="/symptom-checker"
-            className="group bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border border-gray-100 hover:border-blue-200 transform hover:-translate-y-1"
-          >
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Brain className="h-6 w-6 text-white" />
+        {activeTab === "overview" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <Link
+              to="/symptom-checker"
+              className="group bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border border-gray-100 hover:border-blue-200 transform hover:-translate-y-1"
+            >
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Brain className="h-6 w-6 text-white" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                    AI Symptom Checker
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    Get intelligent health insights
+                  </p>
+                </div>
               </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                  AI Symptom Checker
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Get intelligent health insights
-                </p>
-              </div>
-            </div>
-          </Link>
+            </Link>
 
-          <Link
-            to="/find-doctors"
-            className="group bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border border-gray-100 hover:border-green-200 transform hover:-translate-y-1"
-          >
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Stethoscope className="h-6 w-6 text-white" />
+            <Link
+              to="/find-doctors"
+              className="group bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border border-gray-100 hover:border-green-200 transform hover:-translate-y-1"
+            >
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Stethoscope className="h-6 w-6 text-white" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-bold text-gray-900 group-hover:text-green-600 transition-colors">
+                    Find Doctors
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    Search and book appointments
+                  </p>
+                </div>
               </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-bold text-gray-900 group-hover:text-green-600 transition-colors">
-                  Find Doctors
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Search and book appointments
-                </p>
-              </div>
-            </div>
-          </Link>
+            </Link>
 
-          <button
-            onClick={() => setActiveTab("appointments")}
-            className="group bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border border-gray-100 hover:border-purple-200 transform hover:-translate-y-1"
-          >
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Calendar className="h-6 w-6 text-white" />
+            <button
+              onClick={() => setActiveTab("appointments")}
+              className="group bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border border-gray-100 hover:border-purple-200 transform hover:-translate-y-1"
+            >
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Calendar className="h-6 w-6 text-white" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
+                    My Appointments
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    {stats.total} total appointments
+                  </p>
+                </div>
               </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
-                  My Appointments
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  {stats.total} total appointments
-                </p>
-              </div>
-            </div>
-          </button>
+            </button>
 
-          <button
-            onClick={() => setActiveTab("reports")}
-            className="group bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border border-gray-100 hover:border-orange-200 transform hover:-translate-y-1"
-          >
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <FileText className="h-6 w-6 text-white" />
+            <button
+              onClick={() => setActiveTab("reports")}
+              className="group bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border border-gray-100 hover:border-orange-200 transform hover:-translate-y-1"
+            >
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <FileText className="h-6 w-6 text-white" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-bold text-gray-900 group-hover:text-orange-600 transition-colors">
+                    Medical Reports
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    {medicalReports.length} reports available
+                  </p>
+                </div>
               </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-bold text-gray-900 group-hover:text-orange-600 transition-colors">
-                  Medical Reports
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  {medicalReports.length} reports available
-                </p>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("messages")}
+              className="group bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border border-gray-100 hover:border-pink-200 transform hover:-translate-y-1"
+            >
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <MessageCircle className="h-6 w-6 text-white" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-bold text-gray-900 group-hover:text-pink-600 transition-colors">
+                    Messages
+                  </h3>
+                  <p className="text-gray-600 text-sm">Chat with doctors</p>
+                </div>
               </div>
-            </div>
-          </button>
-        </div>
+            </button>
+          </div>
+        )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">
-                  Total Appointments
-                </p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {stats.total}
-                </p>
+        {activeTab === "overview" && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">
+                    Total Appointments
+                  </p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {stats.total}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <Activity className="h-6 w-6 text-blue-600" />
+                </div>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <Activity className="h-6 w-6 text-blue-600" />
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">
+                    Pending
+                  </p>
+                  <p className="text-3xl font-bold text-yellow-600">
+                    {stats.pending}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+                  <Clock className="h-6 w-6 text-yellow-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">
+                    Confirmed
+                  </p>
+                  <p className="text-3xl font-bold text-green-600">
+                    {stats.confirmed}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">
+                    Completed
+                  </p>
+                  <p className="text-3xl font-bold text-blue-600">
+                    {stats.completed}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <CheckCircle className="h-6 w-6 text-blue-600" />
+                </div>
               </div>
             </div>
           </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">
-                  Pending
-                </p>
-                <p className="text-3xl font-bold text-yellow-600">
-                  {stats.pending}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-                <Clock className="h-6 w-6 text-yellow-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">
-                  Confirmed
-                </p>
-                <p className="text-3xl font-bold text-green-600">
-                  {stats.confirmed}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">
-                  Completed
-                </p>
-                <p className="text-3xl font-bold text-blue-600">
-                  {stats.completed}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <CheckCircle className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="mb-8">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-2">
-            <nav className="flex space-x-2">
-              <button
-                onClick={() => setActiveTab("overview")}
-                className={`px-6 py-3 rounded-xl font-medium transition-all ${
-                  activeTab === "overview"
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }`}
-              >
-                Overview
-              </button>
-              <button
-                onClick={() => setActiveTab("appointments")}
-                className={`px-6 py-3 rounded-xl font-medium transition-all ${
-                  activeTab === "appointments"
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }`}
-              >
-                Appointments ({appointments.length})
-              </button>
-              <button
-                onClick={() => setActiveTab("reports")}
-                className={`px-6 py-3 rounded-xl font-medium transition-all ${
-                  activeTab === "reports"
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }`}
-              >
-                Medical Reports ({medicalReports.length})
-              </button>
-            </nav>
-          </div>
-        </div>
+        )}
 
         {/* Tab Content */}
         {activeTab === "overview" && (
@@ -667,6 +760,17 @@ const PatientDashboard = () => {
                             >
                               {appointment.status}
                             </span>
+                            {appointment.doctor && (
+                              <button
+                                onClick={() =>
+                                  startChatWithDoctor(appointment.doctor)
+                                }
+                                className="px-3 py-1 text-sm font-medium text-green-600 bg-green-50 rounded-full hover:bg-green-100 transition-colors flex items-center"
+                              >
+                                <MessageCircle className="h-3 w-3 mr-1" />
+                                Message Doctor
+                              </button>
+                            )}
                             {hasReport && (
                               <button
                                 onClick={() => {
@@ -751,6 +855,12 @@ const PatientDashboard = () => {
                             >
                               <Maximize2 className="h-4 w-4" />
                             </button>
+                            <button
+                              onClick={() => downloadReportAsPDF(report)}
+                              className="text-green-600 hover:text-green-800"
+                            >
+                              <Download className="h-4 w-4" />
+                            </button>
                           </div>
                         </div>
 
@@ -809,6 +919,12 @@ const PatientDashboard = () => {
             </div>
           </div>
         )}
+
+        {activeTab === "messages" && (
+          <div className="h-[calc(100vh-8rem)]">
+            <Chat />
+          </div>
+        )}
       </div>
 
       {/* Medical Report View Modal */}
@@ -819,12 +935,21 @@ const PatientDashboard = () => {
               <h3 className="text-2xl font-semibold text-gray-900">
                 Medical Report
               </h3>
-              <button
-                onClick={() => setShowReportModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-6 w-6" />
-              </button>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => downloadReportAsPDF(selectedReport)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF
+                </button>
+                <button
+                  onClick={() => setShowReportModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
             </div>
 
             {/* Report Header */}
@@ -952,11 +1077,14 @@ const PatientDashboard = () => {
                   </p>
                 </div>
                 <div className="flex space-x-3">
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    Download PDF
+                  <button
+                    onClick={() => downloadReportAsPDF(selectedReport)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Print Report
                   </button>
                   <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                    Print Report
+                    Share Report
                   </button>
                 </div>
               </div>
