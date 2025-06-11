@@ -23,7 +23,7 @@ class WebSocketService {
         // Get the authentication token
         const token = localStorage.getItem("token");
 
-        const socket = new SockJS("http://localhost:8080/chat");
+        const socket = new SockJS("https://aisymptomchecker.onrender.com/");
 
         this.client = new Client({
           webSocketFactory: () => socket,
