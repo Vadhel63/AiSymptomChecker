@@ -12,6 +12,8 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 public class AiSypmtomApplication {
 
 	public static void main(String[] args) {
+
+
 		SpringApplication.run(AiSypmtomApplication.class, args);
 	}
 

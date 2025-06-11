@@ -123,7 +123,17 @@
 			<artifactId>netty-socketio</artifactId>
 			<version>1.7.19</version>
 		</dependency>
+		<dependency>
+			<groupId>com.razorpay</groupId>
+			<artifactId>razorpay-java</artifactId>
+			<version>1.4.3</version>
+		</dependency>
 
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20230227</version>
+		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>

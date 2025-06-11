@@ -107,6 +107,11 @@ export const appointmentAPI = {
       `/Api/Appointment/check-availability?doctorId=${doctorId}&date=${date}&time=${time}`
     ),
   deleteAppointment: (id) => api.delete(`/Api/Appointment/${id}`),
+  // Razorpay Payment Integration
+  createPaymentOrder: (orderData) =>
+    api.post("/Api/Payment/create-order", orderData),
+  verifyPaymentAndCreateAppointment: (paymentData) =>
+    api.post("/Api/Payment/verify-and-create-appointment", paymentData),
 };
 
 // Medical Report API
