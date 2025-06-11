@@ -267,12 +267,6 @@ const ChatWindow = ({ onBack }) => {
 
         <div className="flex items-center space-x-2">
           <button className="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100 transition-colors">
-            <Phone className="h-5 w-5" />
-          </button>
-          <button className="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100 transition-colors">
-            <Video className="h-5 w-5" />
-          </button>
-          <button className="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100 transition-colors">
             <MoreVertical className="h-5 w-5" />
           </button>
         </div>

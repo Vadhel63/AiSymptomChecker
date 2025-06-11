@@ -20,7 +20,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/chat")
-                .setAllowedOrigins("http://localhost:5173") // Add your frontend here
+                .setAllowedOrigins("http://localhost:5173","https://stirring-naiad-8e29b7.netlify.app") // Add your frontend here
                 .withSockJS();
     }
 
