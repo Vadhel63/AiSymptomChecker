@@ -83,6 +83,7 @@ export const chatAPI = {
 
   // Save a new message
   saveMessage: async (messageData) => {
+    console.log(messageData);
     try {
       const response = await fetch(`${API_BASE_URL}/api/chat/send`, {
         method: "POST",

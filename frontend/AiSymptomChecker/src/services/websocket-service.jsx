@@ -1,4 +1,5 @@
 import { Client } from "@stomp/stompjs";
+
 import SockJS from "sockjs-client";
 
 class WebSocketService {
@@ -23,7 +24,7 @@ class WebSocketService {
         // Get the authentication token
         const token = localStorage.getItem("token");
 
-        const socket = new SockJS("https://aisymptomchecker.onrender.com/");
+        const socket = new SockJS("https://aisymptomchecker.onrender.com/chat");
 
         this.client = new Client({
           webSocketFactory: () => socket,

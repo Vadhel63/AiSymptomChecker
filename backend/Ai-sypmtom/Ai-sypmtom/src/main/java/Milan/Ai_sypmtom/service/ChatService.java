@@ -35,6 +35,14 @@ public class ChatService {
      * Save a new chat message to the database
      */
     public ChatMessage saveMessage(ChatMessageDTO dto) {
+        if (dto.getSenderId() == null || dto.getReceiverId()==null)
+        {
+            throw new IllegalArgumentException("User id must not be null");
+
+        }
+        System.out.println("sender Id "+dto.getSenderId());
+        System.out.println("rec Id "+dto.getReceiverId());
+
         UserInfo sender = userRepo.findById(dto.getSenderId()).orElseThrow();
         UserInfo receiver = userRepo.findById(dto.getReceiverId()).orElseThrow();
 

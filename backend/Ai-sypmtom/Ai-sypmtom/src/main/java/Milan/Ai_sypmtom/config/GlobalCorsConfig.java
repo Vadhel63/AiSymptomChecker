@@ -9,8 +9,8 @@ public class GlobalCorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // 👈 allows all endpoints (even /chat/info)
-                .allowedOrigins("*")  // 👈 or your frontend: "http://localhost:63342"
-                .allowedMethods("*")
-                .allowedHeaders("*");
+                .allowedOrigins("https://stirring-naiad-8e29b7.netlify.app")  // 👈 or your frontend: "http://localhost:63342"
+                .allowedMethods("**")
+                .allowedHeaders("**");
     }
 }

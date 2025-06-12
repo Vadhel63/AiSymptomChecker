@@ -276,7 +276,7 @@ const ChatWindow = ({ onBack }) => {
       {!connected && (
         <div className="px-4 py-2 bg-yellow-50 border-b border-yellow-200">
           <p className="text-xs text-yellow-800 text-center flex items-center justify-center">
-            <div className="animate-spin rounded-full h-3 w-3 border-b border-yellow-600 mr-2"></div>
+            <span className="animate-spin rounded-full h-3 w-3 border-b border-yellow-600 mr-2"></span>
             Connecting to chat server...
           </p>
         </div>
