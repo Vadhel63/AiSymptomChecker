@@ -12,6 +12,8 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/chat")
+@CrossOrigin(origins = "https://stirring-naiad-8e29b7.netlify.app")
+
 public class ChatController {
 
     @Autowired
