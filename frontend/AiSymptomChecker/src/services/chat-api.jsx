@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://aisymptomchecker.onrender.com/";
+const API_BASE_URL = "https://aisymptomchecker.onrender.com";
 
 export const chatAPI = {
   // Get all conversations for a user
