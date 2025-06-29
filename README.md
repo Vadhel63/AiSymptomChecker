@@ -10,13 +10,13 @@ AI-powered healthcare platform with role-based dashboards for Patients, Doctors,
 
 ## 📑 Table of Contents
 
-- [🌟 Features](#features)
-- [🔐 Authentication Flow](#authentication-flow)
-- [📊 Dashboard Features](#dashboard-features)
-- [🛠️ Technology Stack](#technology-stack)
-- [📱 API Documentation](#api-documentation)
-- [📸 Screenshots](#screenshots)
-- [🙏 Acknowledgments](#acknowledgments)
+- [🌟 Features](#-features)
+- [🔐 Authentication Flow](#-authentication-flow)
+- [📊 Dashboard Features](#-dashboard-features)
+- [🛠️ Technology Stack](#-technology-stack)
+- [📱 API Documentation](#-api-documentation)
+- [📸 Screenshots](#-screenshots)
+- [🙏 Acknowledgments](#-acknowledgments)
 
 ---
 
@@ -32,7 +32,6 @@ AI-powered healthcare platform with role-based dashboards for Patients, Doctors,
 - **Robust API error handling and CORS support**
 
 ---
-
 
 ## 🔐 Authentication Flow
 
@@ -78,7 +77,6 @@ AI-powered healthcare platform with role-based dashboards for Patients, Doctors,
 
 ## 📱 API Documentation
 
-> (Document your REST endpoints here or link to Swagger/OpenAPI docs if available)
 
 - **Base URL:** `http://localhost:8080/`
 - **Endpoints include:**
@@ -89,6 +87,7 @@ AI-powered healthcare platform with role-based dashboards for Patients, Doctors,
   - `Api/admin/*`
   - `Api/appointments/*`
   - `Api/medical-reports/*`
+
 ---
 
 ## 📸 Screenshots
@@ -101,10 +100,8 @@ AI-powered healthcare platform with role-based dashboards for Patients, Doctors,
 - ![Doctor Dashboard](assets/Screenshot7.png)
 - ![Medical Report Creation](assets/Screenshot6.png)
 - ![Admin Dashboard](assets/Screenshot1.png)
-- 
 
 ---
-
 
 ## 🙏 Acknowledgments
 
