@@ -94,13 +94,13 @@ AI-powered healthcare platform with role-based dashboards for Patients, Doctors,
 ## 📸 Screenshots
 - ![Register](assets/register.png)
 - ![Login](assets/login.png)
-- ![Profile Management](assets/screenshot5.png)
-- ![Patient Dashboard](assets/screenshot2.png)
-- ![Ai Symtptom](assets/screenshot3.png)
-- ![Find Doctor](assets/screenshot4.png)
-- ![Doctor Dashboard](assets/screenshot7.png)
-- ![Medical Report Creation](assets/screenshot6.png)
-- ![Admin Dashboard](assets/screenshot1.png)
+- ![Profile Management](assets/Screenshot5.png)
+- ![Patient Dashboard](assets/Screenshot2.png)
+- ![Ai Symtptom](assets/Screenshot3.png)
+- ![Find Doctor](assets/Screenshot4.png)
+- ![Doctor Dashboard](assets/Screenshot7.png)
+- ![Medical Report Creation](assets/Screenshot6.png)
+- ![Admin Dashboard](assets/Screenshot1.png)
 - 
 
 ---
